@@ -2,21 +2,33 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'app/core/theme/app_theme.dart';
-import 'app/core/values/app_strings.dart';
-import 'app/data/services/local_storage_service.dart';
-import 'app/data/services/supabase_service.dart';
-import 'app/data/services/storage_service.dart';
-import 'app/data/services/api_service.dart';
-import 'app/data/providers/auth_provider.dart';
-import 'app/data/providers/note_provider.dart';
-import 'app/data/providers/todo_provider.dart';
-import 'app/data/providers/theme_provider.dart';
-import 'app/routes/app_page.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+
+// Core
+import 'package:my_app/app/core/theme/app_theme.dart';
+import 'package:my_app/app/core/values/app_strings.dart';
+
+// Services
+import 'package:my_app/app/data/services/api_service.dart';
+import 'package:my_app/app/data/services/local_storage_service.dart';
+import 'package:my_app/app/data/services/supabase_service.dart';
+import 'package:my_app/app/data/services/storage_service.dart';
+
+// Providers
+import 'package:my_app/app/data/providers/auth_provider.dart';
+import 'package:my_app/app/data/providers/note_provider.dart';
+import 'package:my_app/app/data/providers/todo_provider.dart';
+import 'package:my_app/app/data/providers/theme_provider.dart';
+
+// Routes
+import 'package:my_app/app/routes/app_pages.dart';
+
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  await Hive.initFlutter();
+  
   // 🔹 Style status bar & navigation bar default
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(

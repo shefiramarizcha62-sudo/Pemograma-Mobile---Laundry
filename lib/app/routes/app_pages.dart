@@ -14,6 +14,7 @@ import '../modules/todo/bindings/todo_binding.dart';
 import '../modules/todo/views/todo_list_view.dart';
 import '../modules/todo/views/todo_form_view.dart';
 
+
 part 'app_routes.dart';
 
 class AppPages {

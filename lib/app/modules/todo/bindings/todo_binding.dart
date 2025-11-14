@@ -1,7 +1,6 @@
 
 import 'package:get/get.dart';
-
-import '../controllers/todo_controller.dart';
+import 'package:my_app/app/modules/todo/controllers/todo_controller.dart';
 
 class TodoBinding extends Bindings {
   @override
