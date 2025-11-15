@@ -9,7 +9,7 @@ class HomeMainRepository {
   Future<List<String>> fetchProductsWithProgress(
       Function(double) onProgress) async {
     final response = await _api.get(
-      'layanan',
+      '',
       onReceiveProgress: (received, total) {
         if (total != -1) {
           onProgress(received / total);

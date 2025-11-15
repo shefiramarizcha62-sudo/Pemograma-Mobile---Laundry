@@ -23,7 +23,7 @@ class AppColors {
   static const Color inputFillColor = Color(0xFFF9F9F9);
   
   // Text Colors
-  static const Color textPrimary = Color(0xFF000000);
+  static const Color textPrimary = Color.fromARGB(255, 10, 10, 10);
   static const Color textSecondary = Color(0xFF8E8E93);
   static const Color textTertiary = Color(0xFFC7C7CC);
   
@@ -57,7 +57,7 @@ class AppColors {
   static const Color darkSurfaceVariant = Color(0xFF2C2C2E);
   
   // Dark Theme Text Colors
-  static const Color darkTextPrimary = Color(0xFFFFFFFF);
+  static const Color darkTextPrimary = Color.fromARGB(255, 248, 214, 21);
   static const Color darkTextSecondary = Color(0xFF8E8E93);
   static const Color darkTextTertiary = Color(0xFF636366);
   
@@ -66,6 +66,6 @@ class AppColors {
   static const Color darkSeparatorLight = Color(0xFF2C2C2E);
   
   // Dark Theme Card & Container
-  static const Color darkCardBackground = Color(0xFF1C1C1E);
-  static const Color darkCardBorder = Color(0xFF38383A);
+  static const Color darkCardBackground = Color.fromARGB(255, 28, 29, 30);
+  static const Color darkCardBorder = Color.fromARGB(255, 248, 214, 21);
 }

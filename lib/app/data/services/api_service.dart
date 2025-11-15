@@ -8,7 +8,7 @@ class ApiService {
 
   ApiService._internal() {
     dio = Dio(BaseOptions(
-      baseUrl: 'https://68fc553a96f6ff19b9f4d297.mockapi.io/api/v1/',
+      baseUrl: 'https://68fc553a96f6ff19b9f4d297.mockapi.io/api/v1/layanan',
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
     ))

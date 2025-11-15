@@ -21,7 +21,7 @@ class AuthController extends GetxController {
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
-      Get.offAllNamed(Routes.HOME);
+      Get.offAllNamed(Routes.HOME_MAIN);
     } catch (e) {
       Get.snackbar(
         'Error',

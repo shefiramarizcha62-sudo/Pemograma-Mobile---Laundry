@@ -42,7 +42,7 @@ Future<void> main() async {
   try {
     // 🔹 Inisialisasi semua service async
     await Get.putAsync(() => SupabaseService().init());
-    await Get.putAsync(() => ApiService().init());
+    Get.put(ApiService());
     Get.put(AuthProvider());
     Get.put(NoteProvider());
     Get.put(StorageService());

@@ -29,7 +29,7 @@ class _RegisterViewState extends State<RegisterView> {
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<AuthController>();
-    
+
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: SafeArea(
@@ -42,59 +42,41 @@ class _RegisterViewState extends State<RegisterView> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   // App Icon
-                  Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Theme.of(context).colorScheme.primary,
-                          Theme.of(
-                            context,
-                          ).colorScheme.primary.withValues(alpha: 0.7),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(24),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.primary.withValues(alpha: 0.3),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.local_laundry_service,
-                      size: 50,
-                      color: Colors.white,
-                    ),
+                  Icon(
+                    Icons.local_laundry_service,
+                    size: 120,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 12),
 
                   // Title
                   Text(
-                    AppStrings.appName,
-                    style: Theme.of(context).textTheme.displayMedium,
+                    'Gangnam Laundry',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 2),
+
+                  // Subtitle
                   Text(
                     AppStrings.registerToGetStarted,
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
-                  const SizedBox(height: 48),
+                  const SizedBox(height: 32),
+
                   // Email Field
                   Obx(
                     () => TextFormField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: AppStrings.email,
                         hintText: 'name@example.com',
-                        prefixIcon: Icon(Icons.email_outlined),
+                        prefixIcon: Icon(Icons.email_outlined,
+                            color: Theme.of(context).colorScheme.primary),
                       ),
                       validator: controller.validateEmail,
                       enabled: !controller.isLoading.value,
@@ -110,12 +92,14 @@ class _RegisterViewState extends State<RegisterView> {
                       decoration: InputDecoration(
                         labelText: AppStrings.password,
                         hintText: '••••••••',
-                        prefixIcon: const Icon(Icons.lock_outline),
+                        prefixIcon: Icon(Icons.lock_outline,
+                            color: Theme.of(context).colorScheme.primary),
                         suffixIcon: IconButton(
                           icon: Icon(
                             _obscurePassword.value
                                 ? Icons.visibility_outlined
                                 : Icons.visibility_off_outlined,
+                            color: Theme.of(context).colorScheme.primary,
                           ),
                           onPressed: () => _obscurePassword.value = !_obscurePassword.value,
                         ),
@@ -134,17 +118,21 @@ class _RegisterViewState extends State<RegisterView> {
                       decoration: InputDecoration(
                         labelText: AppStrings.confirmPassword,
                         hintText: '••••••••',
-                        prefixIcon: const Icon(Icons.lock_outline),
+                        prefixIcon: Icon(Icons.lock_outline,
+                            color: Theme.of(context).colorScheme.primary),
                         suffixIcon: IconButton(
                           icon: Icon(
                             _obscureConfirmPassword.value
                                 ? Icons.visibility_outlined
                                 : Icons.visibility_off_outlined,
+                            color: Theme.of(context).colorScheme.primary,
                           ),
-                          onPressed: () => _obscureConfirmPassword.value = !_obscureConfirmPassword.value,
+                          onPressed: () =>
+                              _obscureConfirmPassword.value = !_obscureConfirmPassword.value,
                         ),
                       ),
-                      validator: (value) => controller.validateConfirmPassword(value, _passwordController.text),
+                      validator: (value) =>
+                          controller.validateConfirmPassword(value, _passwordController.text),
                       enabled: !controller.isLoading.value,
                     ),
                   ),
@@ -155,7 +143,7 @@ class _RegisterViewState extends State<RegisterView> {
                     () => SizedBox(
                       width: double.infinity,
                       height: 56,
-                      child: ElevatedButton(
+                      child: OutlinedButton(
                         onPressed: controller.isLoading.value
                             ? null
                             : () {
@@ -166,18 +154,27 @@ class _RegisterViewState extends State<RegisterView> {
                                   );
                                 }
                               },
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(
+                              color: Theme.of(context).colorScheme.primary, width: 2),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                        ),
                         child: controller.isLoading.value
-                            ? const SizedBox(
+                            ? SizedBox(
                                 height: 24,
                                 width: 24,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
                                   valueColor: AlwaysStoppedAnimation<Color>(
-                                    Colors.white,
-                                  ),
+                                      Theme.of(context).colorScheme.primary),
                                 ),
                               )
-                            : const Text(AppStrings.register),
+                            : Text(
+                                AppStrings.register,
+                                style: TextStyle(
+                                    color: Theme.of(context).colorScheme.primary),
+                              ),
                       ),
                     ),
                   ),
@@ -192,10 +189,11 @@ class _RegisterViewState extends State<RegisterView> {
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                       TextButton(
-                        onPressed: controller.isLoading.value
-                            ? null
-                            : controller.goToLogin,
-                        child: const Text(AppStrings.login),
+                        onPressed: controller.isLoading.value ? null : controller.goToLogin,
+                        child: Text(
+                          AppStrings.login,
+                          style: TextStyle(color: Theme.of(context).colorScheme.primary),
+                        ),
                       ),
                     ],
                   ),

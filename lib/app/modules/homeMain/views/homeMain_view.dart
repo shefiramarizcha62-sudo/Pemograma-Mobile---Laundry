@@ -5,6 +5,7 @@ import '../../../data/providers/theme_provider.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../controllers/homeMain_controllers.dart';
 
+
 class HomeMainView extends GetView<HomeMainController> {
   const HomeMainView({super.key});
 
@@ -13,6 +14,13 @@ class HomeMainView extends GetView<HomeMainController> {
     final theme = Theme.of(context);
     final themeProvider = Get.find<ThemeProvider>();
 
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.welcomeShown(true);
+      Future.delayed(const Duration(seconds: 3), () {
+        controller.welcomeShown(false);
+      });
+    });
+    
     return Scaffold(
       appBar: AppBar(
         // Leading: reload / refresh API
@@ -81,7 +89,7 @@ class HomeMainView extends GetView<HomeMainController> {
           ),
         ],
       ),
-
+      
       // Body: search + list hasil API
       body: RefreshIndicator(
         onRefresh: controller.fetchProductsWithProgress,

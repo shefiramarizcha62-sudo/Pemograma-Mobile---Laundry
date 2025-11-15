@@ -110,7 +110,7 @@ class _LoginViewState extends State<LoginView> {
                     () => SizedBox(
                       width: double.infinity,
                       height: 56,
-                      child: ElevatedButton(
+                      child: OutlinedButton(
                         onPressed: controller.isLoading.value
                             ? null
                             : () {
@@ -121,13 +121,15 @@ class _LoginViewState extends State<LoginView> {
                                   );
                                 }
                               },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              Theme.of(context).colorScheme.primary,
-                          foregroundColor: Colors.white,
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(
+                            color: Theme.of(context).colorScheme.primary, // warna garis
+                            width: 2,
+                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
+                          foregroundColor: Theme.of(context).colorScheme.primary, // warna teks
                         ),
                         child: controller.isLoading.value
                             ? const SizedBox(

@@ -15,7 +15,7 @@ class HomeView extends GetView<HomeController> {
     
     return Scaffold(
       appBar: AppBar(
-        title: const Text(AppStrings.home),
+        title: const Text('Progres'),
         actions: [
           // Theme Toggle Button
           Obx(() => IconButton(
@@ -90,9 +90,9 @@ class HomeView extends GetView<HomeController> {
               // Notes Card
               _buildMenuCard(
                 context: context,
-                icon: Icons.note_alt_outlined,
-                title: AppStrings.notes,
-                subtitle: AppStrings.manageNotes,
+                icon: Icons.assignment_turned_in_outlined,
+                title: 'Status Layanan',
+                subtitle: 'Pantau status pesanan laundry',
                 color: theme.colorScheme.primary,
                 onTap: controller.goToNotes,
               ),
@@ -100,8 +100,8 @@ class HomeView extends GetView<HomeController> {
               _buildMenuCard(
                 context: context,
                 icon: Icons.checklist_rounded,
-                title: AppStrings.todos,
-                subtitle: AppStrings.manageTodos,
+                title: 'Daftar Pengerjaan',
+                subtitle: 'Kelola urutan pengerjaan layanan laundry',
                 color: theme.colorScheme.secondary,
                 onTap: controller.goToTodos,
               ),
