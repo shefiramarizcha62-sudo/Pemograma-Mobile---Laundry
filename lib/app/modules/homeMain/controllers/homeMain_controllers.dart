@@ -14,8 +14,8 @@ class HomeMainController extends GetxController {
   var searchQuery = ''.obs;
 
   final TextEditingController searchController = TextEditingController();
-  var welcomeShown = false.obs;
-  
+  var isWelcomeShown = false.obs;
+
   @override
   void onInit() {
     super.onInit();

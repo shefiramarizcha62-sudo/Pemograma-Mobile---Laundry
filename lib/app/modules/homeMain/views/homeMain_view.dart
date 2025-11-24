@@ -15,11 +15,9 @@ class HomeMainView extends GetView<HomeMainController> {
     final themeProvider = Get.find<ThemeProvider>();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      controller.welcomeShown(true);
-      Future.delayed(const Duration(seconds: 3), () {
-        controller.welcomeShown(false);
-      });
+      controller.isWelcomeShown(true);
     });
+
     
     return Scaffold(
       appBar: AppBar(
@@ -97,6 +95,12 @@ class HomeMainView extends GetView<HomeMainController> {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
+              // 👇 Tambahkan ini di dalam Column sebelum TextField
+              Obx(() => controller.isWelcomeShown.value
+                ? _WelcomeCard(userEmail: controller.userEmail ?? '-', theme: theme)
+                  : const SizedBox.shrink()),
+                    const SizedBox(height: 12),
+
               // Optional: search field
               TextField(
                 controller: controller.searchController,
@@ -194,6 +198,68 @@ class HomeMainView extends GetView<HomeMainController> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+class _WelcomeCard extends StatelessWidget {
+  final String userEmail;
+  final ThemeData theme;
+
+  const _WelcomeCard({
+    required this.userEmail,
+    required this.theme,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          gradient: LinearGradient(
+            colors: [
+              theme.colorScheme.primary,
+              theme.colorScheme.primary.withOpacity(0.75),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.waving_hand, color: Colors.white, size: 28),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    AppStrings.welcomeBack,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    userEmail,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: Colors.white.withOpacity(0.9),
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
