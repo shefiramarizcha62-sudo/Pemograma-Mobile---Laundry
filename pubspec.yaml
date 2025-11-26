@@ -28,6 +28,7 @@ dependencies:
   flutter_dotenv: ^6.0.0
   image_picker: ^1.1.2
   intl: ^0.18.1
+  flutter_svg: ^2.0.7
     
 dev_dependencies:
   flutter_test:
@@ -44,3 +45,8 @@ flutter:
     - assets/new_background.jpg
     - assets/facebook.png
     - assets/google.png
+    - assets/diskon.png
+    - assets/wash.jpg
+    - assets/dry.jpg
+    - assets/iron.jpg
+    - assets/full.jpg

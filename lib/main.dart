@@ -7,6 +7,8 @@ import 'package:hive_flutter/hive_flutter.dart';
 // Core
 import 'package:my_app/app/core/theme/app_theme.dart';
 import 'package:my_app/app/core/values/app_strings.dart';
+import 'package:my_app/app/core/values/app_colors.dart';
+
 
 // Services
 import 'package:my_app/app/data/services/api_service.dart';
@@ -143,19 +145,26 @@ class MyApp extends StatelessWidget {
         ),
       );
 
-      return GetMaterialApp(
-        title: AppStrings.appName,
-        theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.darkTheme,
-        themeMode:
-            themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-        debugShowCheckedModeBanner: false,
-        initialRoute: authProvider.isAuthenticated
-            ? Routes.HOME_MAIN
-            : Routes.LOGIN,
-        getPages: AppPages.routes,
-        defaultTransition: Transition.cupertino,
-        transitionDuration: const Duration(milliseconds: 300),
+       return Container(
+        decoration: const BoxDecoration(
+          gradient: AppColors.mainGradient,
+        ),
+        child: GetMaterialApp(
+          title: AppStrings.appName,
+          theme: AppTheme.lightTheme.copyWith(
+            scaffoldBackgroundColor: Colors.transparent, // wajib supaya gradient terlihat
+          ),
+          darkTheme: AppTheme.darkTheme,
+          themeMode:
+              themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+          debugShowCheckedModeBanner: false,
+          initialRoute: authProvider.isAuthenticated
+              ? Routes.HOME_MAIN
+              : Routes.LOGIN,
+          getPages: AppPages.routes,
+          defaultTransition: Transition.cupertino,
+          transitionDuration: const Duration(milliseconds: 300),
+        ),
       );
     });
   }

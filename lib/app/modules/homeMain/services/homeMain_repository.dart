@@ -6,26 +6,28 @@ import 'package:my_app/app/data/services/api_service.dart';
 class HomeMainRepository {
   final ApiService _api = ApiService();
 
-  Future<List<String>> fetchProductsWithProgress(
+  Future<List<Map<String, dynamic>>> fetchProductsWithProgress(
       Function(double) onProgress) async {
     final response = await _api.get(
       '',
       onReceiveProgress: (received, total) {
-        if (total != -1) {
-          onProgress(received / total);
-        }
+        if (total != -1) onProgress(received / total);
       },
     );
 
-    final List<dynamic> products = response.data;
+  final List<dynamic> products = response.data;
 
-    return products.map<String>((p) {
-      final nama = p['nama'] ?? 'Tanpa Nama';
-      final harga = p['harga'] ?? '-';
-      final durasi = p['durasi'] ?? '-';
-      return '$nama — Rp$harga ($durasi)';
-    }).toList();
-  }
+  // Ambil hanya 4 pertama
+  final limited = products.take(4).toList();
+
+  return limited.map<Map<String, dynamic>>((p) {
+    return {
+      'nama': p['nama'] ?? 'Tanpa Nama',
+      'harga': p['harga'] ?? '-',
+    };
+  }).toList();
+}
+
 
   Future<void> testDioPerformance() async {
     final stopwatch = Stopwatch()..start();

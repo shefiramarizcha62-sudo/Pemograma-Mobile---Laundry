@@ -16,7 +16,7 @@ class AppTheme {
         onSecondary: Colors.white,
         onSurface: AppColors.textPrimary,
       ),
-      scaffoldBackgroundColor: AppColors.background,
+      scaffoldBackgroundColor: Colors.transparent,
       
       // AppBar Theme
       appBarTheme: const AppBarTheme(

@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
+import '../../../core/values/app_colors.dart';
 import '../../../core/values/app_strings.dart';
 import '../../../data/providers/theme_provider.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../controllers/homeMain_controllers.dart';
-
 
 class HomeMainView extends GetView<HomeMainController> {
   const HomeMainView({super.key});
@@ -14,36 +15,29 @@ class HomeMainView extends GetView<HomeMainController> {
     final theme = Theme.of(context);
     final themeProvider = Get.find<ThemeProvider>();
 
+    // Menampilkan welcome card sekali ketika widget ditampilkan
     WidgetsBinding.instance.addPostFrameCallback((_) {
       controller.isWelcomeShown(true);
     });
 
-    
     return Scaffold(
       appBar: AppBar(
-        // Leading: reload / refresh API
         leading: IconButton(
           icon: const Icon(Icons.refresh_rounded),
           tooltip: 'Reload API Data',
           onPressed: controller.fetchDataFromApi,
         ),
-
-        // Title (tengah)
         centerTitle: true,
         title: const Text('Gangnam Laundry'),
-
-        // Actions: theme toggle + profile
         actions: [
-          // Theme Toggle
+          // Tombol theme toggle
           Obx(() => IconButton(
                 icon: Icon(
                   themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode,
                 ),
-                tooltip:
-                    themeProvider.isDarkMode ? 'Light Mode' : 'Dark Mode',
+                tooltip: themeProvider.isDarkMode ? 'Light Mode' : 'Dark Mode',
                 onPressed: themeProvider.toggleTheme,
               )),
-
           // Profile popup
           PopupMenuButton<String>(
             icon: const Icon(Icons.account_circle_rounded),
@@ -61,8 +55,9 @@ class HomeMainView extends GetView<HomeMainController> {
                     const SizedBox(height: 4),
                     Text(
                       controller.userEmail ?? '-',
-                      style: theme.textTheme.bodyMedium
-                          ?.copyWith(fontWeight: FontWeight.w600),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
                 ),
@@ -87,122 +82,208 @@ class HomeMainView extends GetView<HomeMainController> {
           ),
         ],
       ),
-      
-      // Body: search + list hasil API
-      body: RefreshIndicator(
-        onRefresh: controller.fetchProductsWithProgress,
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              // 👇 Tambahkan ini di dalam Column sebelum TextField
-              Obx(() => controller.isWelcomeShown.value
-                ? _WelcomeCard(userEmail: controller.userEmail ?? '-', theme: theme)
-                  : const SizedBox.shrink()),
-                    const SizedBox(height: 12),
 
-              // Optional: search field
-              TextField(
-                controller: controller.searchController,
-                decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.search),
-                  hintText: 'Cari layanan...',
-                  suffixIcon: Obx(() => controller.searchQuery.value.isEmpty
-                      ? const SizedBox.shrink()
-                      : IconButton(
-                          icon: const Icon(Icons.clear),
-                          onPressed: controller.clearSearch,
-                        )),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            // Welcome Card
+            Obx(() => controller.isWelcomeShown.value
+                ? _WelcomeCard(userEmail: controller.userEmail ?? '-', theme: theme)
+                : const SizedBox.shrink()),
+            const SizedBox(height: 12),
+
+            // Search Field
+            TextField(
+              controller: controller.searchController,
+              decoration: InputDecoration(
+                prefixIcon: const Icon(Icons.search, color: Colors.white),
+                hintText: 'Cari layanan...',
+                hintStyle: const TextStyle(color: Colors.white70),
+                suffixIcon: Obx(() => controller.searchQuery.value.isEmpty
+                    ? const SizedBox.shrink()
+                    : IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: controller.clearSearch,
+                      )),
+                filled: true,
+                fillColor: Colors.grey.withOpacity(0.2),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
+            ),
+            const SizedBox(height: 12),
 
-              const SizedBox(height: 12),
-
-              // Konten: loading / empty / list
-              Expanded(
-                child: Obx(() {
-                  if (controller.isLoading.value) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  if (controller.filteredProduk.isEmpty) {
-                    return Center(
-                      child: Text(
-                        'Tidak ada layanan. Tarik untuk memuat ulang.',
-                        style: theme.textTheme.bodyMedium,
-                      ),
-                    );
-                  }
-
-                  return ListView.separated(
-                    itemCount: controller.filteredProduk.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 8),
-                    itemBuilder: (context, index) {
-                      final item = controller.filteredProduk[index];
-                      return Card(
-                        child: InkWell(
-                          onTap: () {
-                            // Saat menekan item, langsung ke halaman Home (notes & todos)
-                            controller.goToHome();
-                          },
-                          borderRadius: BorderRadius.circular(12),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: theme.colorScheme.primary
-                                        .withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Icon(
-                                    Icons.local_laundry_service,
-                                    color: theme.colorScheme.primary,
-                                    size: 28,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        item,
-                                        style: theme.textTheme.titleMedium
-                                            ?.copyWith(
-                                                fontWeight: FontWeight.w600),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Icon(
-                                  Icons.arrow_forward_ios,
-                                  size: 14,
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                              ],
+            // Bagian scrollable: promo + list API
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: controller.fetchProductsWithProgress,
+                child: ListView(
+                  padding: EdgeInsets.zero,
+                  children: [
+                    // Promo PNG responsif
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final width = constraints.maxWidth;
+                        final height;
+                        if (width < 400) {
+                          height = 150; // layar kecil
+                        } else if (width < 600) {
+                          height = 200; // layar menengah
+                        } else if (width < 800) {
+                          height = 300; // layar besar
+                        } else {
+                          height = 400; // layar ekstra besar
+                        }
+                        return Container(
+                          width: double.infinity,
+                          height: height,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(15),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(15),
+                            child: Image.asset(
+                              'assets/diskon.png',
+                              fit: BoxFit.contain,
                             ),
                           ),
-                        ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 12),
+
+                    // List API
+                    Obx(() {
+                      if (controller.isLoading.value) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      if (controller.filteredProduk.isEmpty) {
+                        return Center(
+                          child: Text(
+                            'Tidak ada layanan. Tarik untuk memuat ulang.',
+                            style: theme.textTheme.bodyMedium,
+                          ),
+                        );
+                      }
+
+                      return ListView.separated(
+                        physics: const NeverScrollableScrollPhysics(),
+                        shrinkWrap: true,
+                        itemCount: controller.filteredProduk.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 8),
+                        itemBuilder: (context, index) {
+                          final item = controller.filteredProduk[index];
+                          return Card(
+                            child: InkWell(
+                              onTap: controller.goToHome,
+                              borderRadius: BorderRadius.circular(12),
+                              child: Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Ikon lokal
+                                    Container(
+                                      padding: const EdgeInsets.all(10),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(12),
+                                        child: Image.asset(
+                                          controller.assetImages[
+                                              index % controller.assetImages.length],
+                                          width: 50,
+                                          height: 50,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    // Nama + Harga
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            item['nama'],
+                                            style: theme.textTheme.titleMedium
+                                                ?.copyWith(
+                                                    fontWeight: FontWeight.w600),
+                                          ),
+                                          Text(
+                                            "Rp ${item['harga']}",
+                                            style: theme.textTheme.labelLarge,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Icon(
+                                      Icons.arrow_forward_ios,
+                                      size: 14,
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        },
                       );
-                    },
-                  );
-                }),
+                    }),
+                  ],
+                ),
               ),
-            ],
-          ),
+            ),
+          ],
+        ),
+      ),
+
+      bottomNavigationBar: Obx(
+        () => BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          selectedItemColor: theme.colorScheme.primary,
+          unselectedItemColor: Colors.grey,
+          currentIndex: controller.selectedIndex.value,
+          onTap: (index) {
+            controller.selectedIndex.value = index;
+          },
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.receipt_long),
+              label: 'Order',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.list_alt),
+              label: 'Services',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.campaign),
+              label: 'Promotions',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person),
+              label: 'Profile',
+            ),
+          ],
         ),
       ),
     );
   }
 }
+
 class _WelcomeCard extends StatelessWidget {
   final String userEmail;
   final ThemeData theme;
@@ -251,9 +332,8 @@ class _WelcomeCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     userEmail,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: Colors.white.withOpacity(0.9),
-                    ),
+                    style: theme.textTheme.bodyMedium
+                        ?.copyWith(color: Colors.white.withOpacity(0.9)),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],

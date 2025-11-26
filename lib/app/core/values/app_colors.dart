@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 
 class AppColors {
   // Primary Colors - iOS Blue
-  static const Color primary = Color.fromARGB(255, 46, 138, 237);
+  static const Color primary = Color(0xFF344D7D);
   static const Color primaryLight = Color(0xFF5AC8FA);
   static const Color primaryDark = Color.fromARGB(255, 243, 168, 5);
   
   // Secondary Colors
-  static const Color secondary = Color(0xFF5856D6);
+  static const Color secondary = Color(0xFFD6EFFF);
   static const Color accent = Color(0xFFFF9500);
   
   // Status Colors
@@ -35,6 +35,17 @@ class AppColors {
   static const Color cardBackground = Color(0xFFFFFFFF);
   static const Color cardBorder = Color(0xFFE5E5EA);
   
+  //gradient background global
+  static const LinearGradient mainGradient = LinearGradient(
+  colors: [
+    Color(0xFF344D7D), // primary
+    Color(0xFFD6EFFF), // secondary
+  ],
+  begin: Alignment.topCenter,
+  end: Alignment.bottomCenter,
+  stops: [0.10, 0.80],
+);
+
   // Gradient Colors
   static const LinearGradient primaryGradient = LinearGradient(
     colors: [Color(0xFF007AFF), Color(0xFF5AC8FA)],

@@ -7,14 +7,27 @@ class HomeMainController extends GetxController {
   final HomeMainRepository repo = Get.find<HomeMainRepository>();
   final AuthProvider _authProvider = Get.find(); // pastikan AuthProvider sudah didaftarkan di binding auth
 
-  var produkLaundry = <String>[].obs;
-  var filteredProduk = <String>[].obs;
+  var produkLaundry = <Map<String, dynamic>>[].obs;
+  var filteredProduk = <Map<String, dynamic>>[].obs;
+
   var isLoading = false.obs;
   var downloadProgress = 0.0.obs;
   var searchQuery = ''.obs;
+  var selectedIndex = 0.obs;
+
 
   final TextEditingController searchController = TextEditingController();
   var isWelcomeShown = false.obs;
+  
+
+  final List<String> assetImages = [
+  "assets/wash.jpg",
+  "assets/dry.jpg",
+  "assets/iron.jpg",
+  "assets/full.jpg",
+];
+
+
 
   @override
   void onInit() {
@@ -53,10 +66,11 @@ class HomeMainController extends GetxController {
       filteredProduk.assignAll(produkLaundry);
     } else {
       filteredProduk.assignAll(
-        produkLaundry
-            .where((p) => p.toLowerCase().contains(query.toLowerCase()))
-            .toList(),
+        produkLaundry.where(
+          (p) => p['nama'].toString().toLowerCase().contains(query.toLowerCase()),
+        ).toList(),
       );
+
     }
   }
 
