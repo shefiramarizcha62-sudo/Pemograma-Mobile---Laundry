@@ -10,6 +10,7 @@ import '../../../data/models/note_model.dart';
 import '../../../data/providers/note_provider.dart';
 import '../../../data/services/storage_service.dart';
 import 'package:my_app/app/routes/app_pages.dart';
+import '../views/note_form_view.dart';
 
 class NoteController extends GetxController {
   static const bucketId = 'note-images';
@@ -19,6 +20,8 @@ class NoteController extends GetxController {
 
   final notes = <NoteModel>[].obs;
   final isLoading = true.obs;
+  // keep UI-only done/toggle state for notes (key: note id or index fallback)
+  final RxMap<String, bool> doneStatus = <String, bool>{}.obs;
 
   @override
   void onInit() {
@@ -26,6 +29,7 @@ class NoteController extends GetxController {
     _ensureBucket();
     loadNotes();
   }
+
 
   Future<void> _ensureBucket() async {
     try {
@@ -110,7 +114,25 @@ class NoteController extends GetxController {
     }
   }
 
+  /// Toggle a 'done' status in-memory for a note (UI only). Key uses id if available otherwise index fallback.
+  void toggleDone(NoteModel note, {int? index}) {
+    final key = (note.id != null) ? note.id.toString() : (index?.toString() ?? note.hashCode.toString());
+    final current = doneStatus[key] == true;
+    doneStatus[key] = !current;
+  }
+
+  /// Read in-memory done state
+  bool isDone(NoteModel note, {int? index}) {
+    final key = (note.id != null) ? note.id.toString() : (index?.toString() ?? note.hashCode.toString());
+    return doneStatus[key] == true;
+  }
+
   Future<void> goToForm({NoteModel? note}) async {
+    // ensure any previous form controller instance is removed so the form reads arguments correctly
+    try {
+      if (Get.isRegistered<NoteFormController>()) Get.delete<NoteFormController>();
+    } catch (_) {}
+
     final result = await Get.toNamed(Routes.NOTE_FORM, arguments: note);
 
     if (result != null) {

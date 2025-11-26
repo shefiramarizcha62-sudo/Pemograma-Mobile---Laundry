@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -23,6 +24,7 @@ class NoteFormController extends GetxController {
 
   final titleController = TextEditingController();
   final contentController = TextEditingController();
+  final isFormValid = false.obs;
 
   final formKey = GlobalKey<FormState>();
   final isLoading = false.obs;
@@ -61,12 +63,48 @@ class NoteFormController extends GetxController {
         }
       }
     }
+    // update form valid state when fields change
+    titleController.addListener(_updateFormValid);
+    contentController.addListener(_updateFormValid);
+    _updateFormValid();
+  }
+
+  /// Initialize the controller with an existing note (used when opening the form as a bottom sheet)
+  void initForEdit(NoteModel? initialNote) {
+    if (initialNote == null) return;
+
+    note = initialNote;
+    titleController.text = note!.title;
+    contentController.text = note!.content;
+
+    if (note!.imageUrl != null) {
+      existingImageUrl.value = note!.imageUrl;
+    } else if (note!.imagePath != null && note!.imagePath!.isNotEmpty) {
+      try {
+        existingImageUrl.value = _storageService.getPublicUrl(
+          NoteController.bucketId,
+          note!.imagePath!,
+        );
+      } catch (e) {
+        debugPrint('Unable to load existing image URL: $e');
+      }
+    }
+
+    _updateFormValid();
+  }
+
+  void _updateFormValid() {
+    final titleOk = titleController.text.trim().isNotEmpty;
+    final contentOk = contentController.text.trim().isNotEmpty;
+    isFormValid(titleOk && contentOk);
   }
 
   @override
   void onClose() {
     titleController.dispose();
     contentController.dispose();
+    titleController.removeListener(_updateFormValid);
+    contentController.removeListener(_updateFormValid);
     super.onClose();
   }
 
@@ -252,13 +290,22 @@ class NoteFormController extends GetxController {
 }
 
 class NoteFormView extends StatelessWidget {
-  NoteFormView({super.key});
+  /// When provided, the form initializes for editing the passed [initialNote].
+  final NoteModel? initialNote;
 
-  final controller = Get.put(NoteFormController());
+  NoteFormView({super.key, this.initialNote});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
+    // create controller instance for this view (fresh instance should be deleted by caller if needed)
+    final controller = Get.put(NoteFormController());
+
+    // If initialNote is provided (edit case opened as bottom sheet), initialize controller state
+    if (initialNote != null && (controller.note == null || controller.note?.id != initialNote!.id)) {
+      controller.initForEdit(initialNote);
+    }
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
@@ -269,46 +316,174 @@ class NoteFormView extends StatelessWidget {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
-        child: Form(
+          child: Form(
           key: controller.formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Obx(
-                () => TextFormField(
-                  controller: controller.titleController,
-                  decoration: const InputDecoration(
-                    labelText: AppStrings.noteTitle,
-                    prefixIcon: Icon(Icons.title_outlined),
+              // large white neumorphic card containing the input sections
+              Card(
+                color: Colors.white,
+                elevation: 8,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                child: Padding(
+                  padding: const EdgeInsets.all(18),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Nama Customer input in its own soft card
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary.withOpacity(0.03),
+                          borderRadius: BorderRadius.circular(14),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.02),
+                              blurRadius: 6,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: Obx(() => TextFormField(
+                              controller: controller.titleController,
+                              decoration: InputDecoration(
+                                labelText: AppStrings.noteTitle,
+                                prefixIcon: Icon(Icons.person_outline, color: theme.colorScheme.primary),
+                                border: InputBorder.none,
+                              ),
+                              textInputAction: TextInputAction.next,
+                              validator: controller.validateTitle,
+                              enabled: !controller.isLoading.value,
+                            )),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Berat input in own soft card
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary.withOpacity(0.03),
+                          borderRadius: BorderRadius.circular(14),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.02),
+                              blurRadius: 6,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: Obx(() => TextFormField(
+                              controller: controller.contentController,
+                              decoration: InputDecoration(
+                                labelText: AppStrings.noteContent,
+                                prefixIcon: Icon(Icons.monitor_weight_outlined, color: theme.colorScheme.primary),
+                                suffixText: 'kg',
+                                border: InputBorder.none,
+                              ),
+                              keyboardType: TextInputType.numberWithOptions(decimal: true),
+                              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9\.,]'))],
+                              maxLines: 1,
+                              textInputAction: TextInputAction.done,
+                              validator: controller.validateContent,
+                              enabled: !controller.isLoading.value,
+                            )),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Image selector + preview in a single row
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary.withOpacity(0.03),
+                          borderRadius: BorderRadius.circular(14),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.02),
+                              blurRadius: 6,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            // left: pick button area (flexible)
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: controller.isLoading.value ? null : controller.pickImage,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.transparent,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.image_outlined, color: theme.colorScheme.primary),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(AppStrings.addImage, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+                                            Obx(() => Text(
+                                                  controller.hasPreviewImage ? AppStrings.changeImage : AppStrings.addImage,
+                                                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                                                )),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            // right: preview box
+                            const SizedBox(width: 12),
+                            Container(
+                              width: 96,
+                              height: 96,
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.surfaceVariant.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Obx(() {
+                                  final pickedFile = controller.selectedImage.value;
+                                  final pickedBytes = controller.selectedImageBytes.value;
+                                  final existingUrl = controller.existingImageUrl.value;
+                                  if (pickedBytes != null) {
+                                    return Image.memory(pickedBytes, fit: BoxFit.cover);
+                                  } else if (pickedFile != null && !kIsWeb) {
+                                    return Image.file(File(pickedFile.path), fit: BoxFit.cover);
+                                  } else if (existingUrl != null) {
+                                    return Image.network(existingUrl, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const SizedBox.shrink());
+                                  }
+                                  return Icon(Icons.photo_outlined, color: theme.colorScheme.onSurfaceVariant.withOpacity(0.4));
+                                }),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  textInputAction: TextInputAction.next,
-                  validator: controller.validateTitle,
-                  enabled: !controller.isLoading.value,
                 ),
               ),
-              const SizedBox(height: 16),
-              Obx(
-                () => TextFormField(
-                  controller: controller.contentController,
-                  decoration: const InputDecoration(
-                    labelText: AppStrings.noteContent,
-                    alignLabelWithHint: true,
-                  ),
-                  maxLines: 8,
-                  textInputAction: TextInputAction.newline,
-                  minLines: 5,
-                  validator: controller.validateContent,
-                  enabled: !controller.isLoading.value,
-                ),
-              ),
-              const SizedBox(height: 24),
-              _ImageAttachmentSection(controller: controller),
               const SizedBox(height: 32),
-              Obx(
-                () => FilledButton(
-                  onPressed: controller.isLoading.value
-                      ? null
-                      : controller.submitForm,
+              const SizedBox(height: 18),
+              Obx(() {
+                final enabled = controller.isFormValid.value && !controller.isLoading.value;
+                return FilledButton(
+                  onPressed: enabled ? controller.submitForm : null,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: enabled ? theme.colorScheme.primary : theme.colorScheme.primary.withOpacity(0.35),
+                    foregroundColor: enabled ? theme.colorScheme.onPrimary : theme.colorScheme.onPrimary.withOpacity(0.8),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
                   child: controller.isLoading.value
                       ? SizedBox(
                           height: 20,
@@ -319,12 +494,11 @@ class NoteFormView extends StatelessWidget {
                           ),
                         )
                       : Text(
-                          controller.isEditing
-                              ? AppStrings.updateNote
-                              : AppStrings.saveNote,
+                          controller.isEditing ? AppStrings.updateNote : AppStrings.saveNote,
+                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
                         ),
-                ),
-              ),
+                );
+              }),
             ],
           ),
         ),
@@ -333,127 +507,4 @@ class NoteFormView extends StatelessWidget {
   }
 }
 
-class _ImageAttachmentSection extends StatelessWidget {
-  const _ImageAttachmentSection({required this.controller});
-
-  final NoteFormController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Obx(() {
-      final pickedFile = controller.selectedImage.value;
-      final pickedBytes = controller.selectedImageBytes.value;
-      final existingUrl = controller.existingImageUrl.value;
-      final hasPreview = controller.hasPreviewImage;
-      final isDisabled = controller.isLoading.value;
-
-      Widget preview;
-      if (pickedBytes != null) {
-        preview = Image.memory(
-          pickedBytes,
-          fit: BoxFit.cover,
-          width: double.infinity,
-        );
-      } else if (pickedFile != null && !kIsWeb) {
-        preview = Image.file(
-          File(pickedFile.path),
-          fit: BoxFit.cover,
-          width: double.infinity,
-        );
-      } else if (existingUrl != null) {
-        preview = Image.network(
-          existingUrl,
-          fit: BoxFit.cover,
-          width: double.infinity,
-          errorBuilder: (_, _, _) => _Placeholder(theme: theme),
-        );
-      } else {
-        preview = _Placeholder(theme: theme);
-      }
-
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            AppStrings.imagePreview,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 12),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              height: 200,
-              width: double.infinity,
-              color: theme.colorScheme.surfaceContainerHighest,
-              child: preview,
-            ),
-          ),
-          if (!hasPreview)
-            Padding(
-              padding: const EdgeInsets.only(top: 12),
-              child: Text(
-                AppStrings.imageAttachmentOptional,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: [
-              OutlinedButton.icon(
-                onPressed: isDisabled ? null : controller.pickImage,
-                icon: Icon(
-                  hasPreview
-                      ? Icons.photo_library_outlined
-                      : Icons.add_photo_alternate_outlined,
-                ),
-                label: Text(
-                  hasPreview ? AppStrings.changeImage : AppStrings.addImage,
-                ),
-              ),
-              if (hasPreview)
-                TextButton.icon(
-                  onPressed: isDisabled ? null : controller.removeImage,
-                  icon: const Icon(Icons.delete_outline),
-                  label: const Text(AppStrings.removeImage),
-                  style: TextButton.styleFrom(
-                    foregroundColor: theme.colorScheme.error,
-                  ),
-                ),
-            ],
-          ),
-        ],
-      );
-    });
-  }
-}
-
-class _Placeholder extends StatelessWidget {
-  const _Placeholder({required this.theme});
-
-  final ThemeData theme;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Icon(
-        Icons.photo_outlined,
-        size: 48,
-        color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
-      ),
-    );
-  }
-}
+// _ImageAttachmentSection and _Placeholder removed — image picker is integrated directly in the form UI above.
