@@ -82,5 +82,5 @@ class AppColors {
 
   // Tambahkan di bagian Dark Theme Colors
   static const Color darkIcon = Color.fromARGB(255, 14, 226, 250); // misal kuning terang
-
+  
 }

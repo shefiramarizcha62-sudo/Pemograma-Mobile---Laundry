@@ -1,13 +1,13 @@
 import 'package:dio/dio.dart';
 import 'package:my_app/app/data/services/api_service.dart';
 
- // ganti dengan nama projectmu
-
+// ganti dengan nama projectmu
 class HomeMainRepository {
   final ApiService _api = ApiService();
 
   Future<List<Map<String, dynamic>>> fetchProductsWithProgress(
-      Function(double) onProgress) async {
+    Function(double) onProgress,
+  ) async {
     final response = await _api.get(
       '',
       onReceiveProgress: (received, total) {
@@ -15,19 +15,24 @@ class HomeMainRepository {
       },
     );
 
-  final List<dynamic> products = response.data;
+    final List<dynamic> products = response.data;
 
-  // Ambil hanya 4 pertama
-  final limited = products.take(4).toList();
+    print("=== DEBUG RESPONSE ANDROID ===");
+    for (var item in products.take(4)) {
+      print(item);
+    }
+    print("==============================");
 
-  return limited.map<Map<String, dynamic>>((p) {
-    return {
-      'nama': p['nama'] ?? 'Tanpa Nama',
-      'harga': p['harga'] ?? '-',
-    };
-  }).toList();
-}
+    // Ambil hanya 4 pertama
+    final limited = products.take(4).toList();
 
+    // Kembalikan hanya nama produk
+    return limited.map<Map<String, dynamic>>((p) {
+      return {
+        'nama': p['nama'] ?? 'Tanpa Nama',
+      };
+    }).toList();
+  }
 
   Future<void> testDioPerformance() async {
     final stopwatch = Stopwatch()..start();

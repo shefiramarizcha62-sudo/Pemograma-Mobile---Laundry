@@ -41,10 +41,9 @@ class HomeMainView extends GetView<HomeMainController> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // Reload + email + lokasi
                   IconButton(
                     icon: Icon(
-                      Icons.refresh_rounded, 
+                      Icons.refresh_rounded,
                       color: themeProvider.isDarkMode
                           ? AppColors.darkIcon
                           : theme.colorScheme.primary,
@@ -56,7 +55,6 @@ class HomeMainView extends GetView<HomeMainController> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Email (selalu hitam)
                       Text(
                         controller.userEmail ?? '-',
                         style: TextStyle(
@@ -68,48 +66,52 @@ class HomeMainView extends GetView<HomeMainController> {
                         ),
                       ),
                       const SizedBox(height: 2),
-                      // Lokasi (ikut dark/light theme)
                       GestureDetector(
-                        onTap: () {
-                          // route ke halaman lokasi
-                        },
-                        child: Obx(() => Text(
-                              'Lokasi kamu',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: themeProvider.isDarkMode
-                                    ? AppColors.darkIcon
-                                    : theme.colorScheme.primary,
-                              ),
-                            )),
+                        onTap: () {},
+                        child: Obx(
+                          () => Text(
+                            'Lokasi kamu',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: themeProvider.isDarkMode
+                                  ? AppColors.darkIcon
+                                  : theme.colorScheme.primary,
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),
                   const Spacer(),
-                  // Toggle theme + lokasi icon
                   Row(
                     children: [
-                      Obx(() => IconButton(
-                            icon: Icon(
-                              themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode,
-                              color: themeProvider.isDarkMode
-                                  ? AppColors.darkIcon
-                                  : theme.colorScheme.primary,
-                            ),
-                            tooltip: themeProvider.isDarkMode ? 'Light Mode' : 'Dark Mode',
-                            onPressed: themeProvider.toggleTheme,
-                          )),
-                      Obx(() => IconButton(
-                            icon: Icon(
-                              Icons.location_on,
-                              color: themeProvider.isDarkMode
-                                  ? AppColors.darkIcon
-                                  : theme.colorScheme.primary,
-                            ),
-                            onPressed: () {
-                              // route ke halaman lokasi
-                            },
-                          )),
+                      Obx(
+                        () => IconButton(
+                          icon: Icon(
+                            themeProvider.isDarkMode
+                                ? Icons.light_mode
+                                : Icons.dark_mode,
+                            color: themeProvider.isDarkMode
+                                ? AppColors.darkIcon
+                                : theme.colorScheme.primary,
+                          ),
+                          tooltip: themeProvider.isDarkMode
+                              ? 'Light Mode'
+                              : 'Dark Mode',
+                          onPressed: themeProvider.toggleTheme,
+                        ),
+                      ),
+                      Obx(
+                        () => IconButton(
+                          icon: Icon(
+                            Icons.location_on,
+                            color: themeProvider.isDarkMode
+                                ? AppColors.darkIcon
+                                : theme.colorScheme.primary,
+                          ),
+                          onPressed: () {},
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -122,24 +124,25 @@ class HomeMainView extends GetView<HomeMainController> {
               controller: controller.searchController,
               decoration: InputDecoration(
                 prefixIcon: Icon(
-                  Icons.search, 
+                  Icons.search,
                   color: themeProvider.isDarkMode
                       ? AppColors.darkIcon
                       : AppColors.primary,
                 ),
-                
                 hintText: 'Cari layanan...',
                 hintStyle: TextStyle(
                   color: themeProvider.isDarkMode
                       ? AppColors.darkIcon
                       : AppColors.primary,
                 ),
-                suffixIcon: Obx(() => controller.searchQuery.value.isEmpty
-                    ? const SizedBox.shrink()
-                    : IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: controller.clearSearch,
-                      )),
+                suffixIcon: Obx(
+                  () => controller.searchQuery.value.isEmpty
+                      ? const SizedBox.shrink()
+                      : IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: controller.clearSearch,
+                        ),
+                ),
                 filled: true,
                 fillColor: Colors.grey.withOpacity(0.2),
                 border: OutlineInputBorder(
@@ -159,16 +162,13 @@ class HomeMainView extends GetView<HomeMainController> {
                     LayoutBuilder(
                       builder: (context, constraints) {
                         final width = constraints.maxWidth;
-                        final height;
-                        if (width < 400) {
-                          height = 150;
-                        } else if (width < 600) {
-                          height = 200;
-                        } else if (width < 800) {
-                          height = 300;
-                        } else {
-                          height = 400;
-                        }
+                        final height = width < 400
+                            ? 150.0
+                            : width < 600
+                                ? 200.0
+                                : width < 800
+                                    ? 300.0
+                                    : 400.0;
                         return Container(
                           width: double.infinity,
                           height: height,
@@ -214,6 +214,7 @@ class HomeMainView extends GetView<HomeMainController> {
                         separatorBuilder: (_, __) => const SizedBox(height: 8),
                         itemBuilder: (context, index) {
                           final item = controller.filteredProduk[index];
+
                           return Card(
                             child: InkWell(
                               onTap: controller.goToHome,
@@ -238,21 +239,11 @@ class HomeMainView extends GetView<HomeMainController> {
                                     ),
                                     const SizedBox(width: 12),
                                     Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            item['nama'],
-                                            style: theme.textTheme.titleMedium
-                                                ?.copyWith(
-                                                    fontWeight: FontWeight.w600),
-                                          ),
-                                          Text(
-                                            "Rp ${item['harga']}",
-                                            style: theme.textTheme.labelLarge,
-                                          ),
-                                        ],
+                                      child: Text(
+                                        item['nama'] ?? 'Tanpa Nama',
+                                        style: theme.textTheme.titleMedium?.copyWith(
+                                          fontWeight: FontWeight.w600,
+                                        ),
                                       ),
                                     ),
                                     Icon(
@@ -288,8 +279,8 @@ class HomeMainView extends GetView<HomeMainController> {
               : Colors.grey,
           currentIndex: controller.selectedIndex.value,
           onTap: (index) {
-            if (index == 4) {
-              // Klik ikon Profile
+            if (index == 3) {
+              // Profile popup
               final RenderBox bar = context.findRenderObject() as RenderBox;
               final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
               final position = RelativeRect.fromRect(
@@ -311,8 +302,8 @@ class HomeMainView extends GetView<HomeMainController> {
                       children: [
                         Text(
                           AppStrings.loggedIn,
-                          style: theme.textTheme.bodySmall
-                              ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant),
                         ),
                         const SizedBox(height: 4),
                         Text(
