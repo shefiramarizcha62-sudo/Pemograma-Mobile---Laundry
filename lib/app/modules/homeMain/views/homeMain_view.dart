@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../../core/values/app_colors.dart';
 import '../../../core/values/app_strings.dart';
+import '../../../core/values/app_colors.dart';
 import '../../../data/providers/theme_provider.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../controllers/homeMain_controllers.dart';
@@ -15,91 +15,125 @@ class HomeMainView extends GetView<HomeMainController> {
     final theme = Theme.of(context);
     final themeProvider = Get.find<ThemeProvider>();
 
-    // Menampilkan welcome card sekali ketika widget ditampilkan
     WidgetsBinding.instance.addPostFrameCallback((_) {
       controller.isWelcomeShown(true);
     });
 
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.refresh_rounded),
-          tooltip: 'Reload API Data',
-          onPressed: controller.fetchDataFromApi,
-        ),
-        centerTitle: true,
-        title: const Text('Gangnam Laundry'),
-        actions: [
-          // Tombol theme toggle
-          Obx(() => IconButton(
-                icon: Icon(
-                  themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode,
-                ),
-                tooltip: themeProvider.isDarkMode ? 'Light Mode' : 'Dark Mode',
-                onPressed: themeProvider.toggleTheme,
-              )),
-          // Profile popup
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.account_circle_rounded),
-            itemBuilder: (context) => [
-              PopupMenuItem<String>(
-                enabled: false,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      AppStrings.loggedIn,
-                      style: theme.textTheme.bodySmall
-                          ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      controller.userEmail ?? '-',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const PopupMenuDivider(),
-              PopupMenuItem<String>(
-                value: 'logout',
-                child: Row(
-                  children: [
-                    Icon(Icons.logout, color: theme.colorScheme.error),
-                    const SizedBox(width: 8),
-                    const Text(AppStrings.logout),
-                  ],
-                ),
-              ),
-            ],
-            onSelected: (value) {
-              if (value == 'logout') {
-                Get.find<AuthController>().logout();
-              }
-            },
-          ),
-        ],
-      ),
-
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // Welcome Card
-            Obx(() => controller.isWelcomeShown.value
-                ? _WelcomeCard(userEmail: controller.userEmail ?? '-', theme: theme)
-                : const SizedBox.shrink()),
+            // Header + Welcome Card horizontal
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: theme.cardColor,
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Reload + email + lokasi
+                  IconButton(
+                    icon: Icon(
+                      Icons.refresh_rounded, 
+                      color: themeProvider.isDarkMode
+                          ? AppColors.darkIcon
+                          : theme.colorScheme.primary,
+                    ),
+                    tooltip: 'Reload API Data',
+                    onPressed: controller.fetchDataFromApi,
+                  ),
+                  const SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Email (selalu hitam)
+                      Text(
+                        controller.userEmail ?? '-',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: themeProvider.isDarkMode
+                              ? AppColors.darkTextPrimary
+                              : AppColors.textPrimary,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      // Lokasi (ikut dark/light theme)
+                      GestureDetector(
+                        onTap: () {
+                          // route ke halaman lokasi
+                        },
+                        child: Obx(() => Text(
+                              'Lokasi kamu',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: themeProvider.isDarkMode
+                                    ? AppColors.darkIcon
+                                    : theme.colorScheme.primary,
+                              ),
+                            )),
+                      ),
+                    ],
+                  ),
+                  const Spacer(),
+                  // Toggle theme + lokasi icon
+                  Row(
+                    children: [
+                      Obx(() => IconButton(
+                            icon: Icon(
+                              themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode,
+                              color: themeProvider.isDarkMode
+                                  ? AppColors.darkIcon
+                                  : theme.colorScheme.primary,
+                            ),
+                            tooltip: themeProvider.isDarkMode ? 'Light Mode' : 'Dark Mode',
+                            onPressed: themeProvider.toggleTheme,
+                          )),
+                      Obx(() => IconButton(
+                            icon: Icon(
+                              Icons.location_on,
+                              color: themeProvider.isDarkMode
+                                  ? AppColors.darkIcon
+                                  : theme.colorScheme.primary,
+                            ),
+                            onPressed: () {
+                              // route ke halaman lokasi
+                            },
+                          )),
+                    ],
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 12),
 
             // Search Field
             TextField(
               controller: controller.searchController,
               decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.search, color: Colors.white),
+                prefixIcon: Icon(
+                  Icons.search, 
+                  color: themeProvider.isDarkMode
+                      ? AppColors.darkIcon
+                      : AppColors.primary,
+                ),
+                
                 hintText: 'Cari layanan...',
-                hintStyle: const TextStyle(color: Colors.white70),
+                hintStyle: TextStyle(
+                  color: themeProvider.isDarkMode
+                      ? AppColors.darkIcon
+                      : AppColors.primary,
+                ),
                 suffixIcon: Obx(() => controller.searchQuery.value.isEmpty
                     ? const SizedBox.shrink()
                     : IconButton(
@@ -122,25 +156,24 @@ class HomeMainView extends GetView<HomeMainController> {
                 child: ListView(
                   padding: EdgeInsets.zero,
                   children: [
-                    // Promo PNG responsif
                     LayoutBuilder(
                       builder: (context, constraints) {
                         final width = constraints.maxWidth;
                         final height;
                         if (width < 400) {
-                          height = 150; // layar kecil
+                          height = 150;
                         } else if (width < 600) {
-                          height = 200; // layar menengah
+                          height = 200;
                         } else if (width < 800) {
-                          height = 300; // layar besar
+                          height = 300;
                         } else {
-                          height = 400; // layar ekstra besar
+                          height = 400;
                         }
                         return Container(
                           width: double.infinity,
                           height: height,
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: theme.cardColor,
                             borderRadius: BorderRadius.circular(15),
                             boxShadow: [
                               BoxShadow(
@@ -161,8 +194,6 @@ class HomeMainView extends GetView<HomeMainController> {
                       },
                     ),
                     const SizedBox(height: 12),
-
-                    // List API
                     Obx(() {
                       if (controller.isLoading.value) {
                         return const Center(child: CircularProgressIndicator());
@@ -192,7 +223,6 @@ class HomeMainView extends GetView<HomeMainController> {
                                 child: Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    // Ikon lokal
                                     Container(
                                       padding: const EdgeInsets.all(10),
                                       child: ClipRRect(
@@ -207,7 +237,6 @@ class HomeMainView extends GetView<HomeMainController> {
                                       ),
                                     ),
                                     const SizedBox(width: 12),
-                                    // Nama + Harga
                                     Expanded(
                                       child: Column(
                                         crossAxisAlignment:
@@ -247,23 +276,79 @@ class HomeMainView extends GetView<HomeMainController> {
         ),
       ),
 
+      // Bottom Navigator dengan Profile popup
       bottomNavigationBar: Obx(
         () => BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
-          selectedItemColor: theme.colorScheme.primary,
-          unselectedItemColor: Colors.grey,
+          selectedItemColor: themeProvider.isDarkMode
+              ? AppColors.darkIcon
+              : theme.colorScheme.primary,
+          unselectedItemColor: themeProvider.isDarkMode
+              ? AppColors.darkTextSecondary
+              : Colors.grey,
           currentIndex: controller.selectedIndex.value,
           onTap: (index) {
-            controller.selectedIndex.value = index;
+            if (index == 4) {
+              // Klik ikon Profile
+              final RenderBox bar = context.findRenderObject() as RenderBox;
+              final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+              final position = RelativeRect.fromRect(
+                Rect.fromPoints(
+                  bar.localToGlobal(Offset.zero, ancestor: overlay),
+                  bar.localToGlobal(bar.size.bottomRight(Offset.zero), ancestor: overlay),
+                ),
+                Offset.zero & overlay.size,
+              );
+
+              showMenu<String>(
+                context: context,
+                position: position,
+                items: [
+                  PopupMenuItem<String>(
+                    enabled: false,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          AppStrings.loggedIn,
+                          style: theme.textTheme.bodySmall
+                              ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          controller.userEmail ?? '-',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuDivider(),
+                  PopupMenuItem<String>(
+                    value: 'logout',
+                    child: Row(
+                      children: [
+                        Icon(Icons.logout, color: theme.colorScheme.error),
+                        const SizedBox(width: 8),
+                        const Text(AppStrings.logout),
+                      ],
+                    ),
+                  ),
+                ],
+              ).then((value) {
+                if (value == 'logout') {
+                  Get.find<AuthController>().logout();
+                }
+              });
+            } else {
+              controller.selectedIndex.value = index;
+            }
           },
           items: const [
             BottomNavigationBarItem(
               icon: Icon(Icons.home),
               label: 'Home',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.receipt_long),
-              label: 'Order',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.list_alt),
@@ -276,68 +361,6 @@ class HomeMainView extends GetView<HomeMainController> {
             BottomNavigationBarItem(
               icon: Icon(Icons.person),
               label: 'Profile',
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _WelcomeCard extends StatelessWidget {
-  final String userEmail;
-  final ThemeData theme;
-
-  const _WelcomeCard({
-    required this.userEmail,
-    required this.theme,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          gradient: LinearGradient(
-            colors: [
-              theme.colorScheme.primary,
-              theme.colorScheme.primary.withOpacity(0.75),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.waving_hand, color: Colors.white, size: 28),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    AppStrings.welcomeBack,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    userEmail,
-                    style: theme.textTheme.bodyMedium
-                        ?.copyWith(color: Colors.white.withOpacity(0.9)),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
             ),
           ],
         ),
