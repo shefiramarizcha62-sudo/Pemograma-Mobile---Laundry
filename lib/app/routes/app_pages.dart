@@ -13,6 +13,12 @@ import '../modules/note/views/note_form_view.dart';
 import '../modules/todo/bindings/todo_binding.dart';
 import '../modules/todo/views/todo_list_view.dart';
 import '../modules/todo/views/todo_form_view.dart';
+import '../modules/order/views/order_view.dart';
+import '../modules/order/bindings/order_binding.dart';
+import '../modules/location/bindings/network_location_binding.dart';
+import '../modules/location/bindings/gps_location_binding.dart';
+import '../modules/location/views/network_location_view.dart';
+import '../modules/location/views/gps_location_view.dart';
 
 
 part 'app_routes.dart';
@@ -71,5 +77,24 @@ class AppPages {
        page: () => TodoFormView(),
        binding: TodoBinding(),
      ),
+     
+     GetPage(
+      name: Routes.ORDER,
+      page: () => const OrderPage(),
+      binding: OrderBinding(),
+    ),
+
+    GetPage(
+      name: Routes.NETWORK_LOCATION,
+      page: () => const NetworkLocationView(),
+      binding: NetworkLocationBinding(),
+      ),
+
+    GetPage(
+      name: Routes.GPS_LOCATION,
+      page: () => const GpsLocationView(),
+      binding: GpsLocationBinding(),
+    ),
+
   ];
 }

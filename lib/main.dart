@@ -9,7 +9,6 @@ import 'package:my_app/app/core/theme/app_theme.dart';
 import 'package:my_app/app/core/values/app_strings.dart';
 import 'package:my_app/app/core/values/app_colors.dart';
 
-
 // Services
 import 'package:my_app/app/data/services/api_service.dart';
 import 'package:my_app/app/data/services/local_storage_service.dart';
@@ -25,6 +24,7 @@ import 'package:my_app/app/data/providers/theme_provider.dart';
 // Routes
 import 'package:my_app/app/routes/app_pages.dart';
 
+import 'package:my_app/app/modules/auth/controllers/auth_controller.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,6 +46,7 @@ Future<void> main() async {
     await Get.putAsync(() => SupabaseService().init());
     Get.put(ApiService());
     Get.put(AuthProvider());
+    Get.put(AuthController()); 
     Get.put(NoteProvider());
     Get.put(StorageService());
     await Get.putAsync(() => LocalStorageService().init());

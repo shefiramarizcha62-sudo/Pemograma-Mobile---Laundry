@@ -25,7 +25,7 @@ class AppColors {
   // Text Colors
   static const Color textPrimary = Color.fromARGB(255, 10, 10, 10);
   static const Color textSecondary = Color(0xFF8E8E93);
-  static const Color textTertiary = Color(0xFFC7C7CC);
+  static const Color textTertiary = Color.fromARGB(255, 251, 251, 252);
   
   // Separator
   static const Color separator = Color(0xFFC6C6C8);
@@ -68,7 +68,7 @@ class AppColors {
   static const Color darkSurfaceVariant = Color(0xFF2C2C2E);
   
   // Dark Theme Text Colors
-  static const Color darkTextPrimary = Color.fromARGB(255, 248, 214, 21);
+  static const Color darkTextPrimary = Color.fromARGB(255, 14, 226, 250);
   static const Color darkTextSecondary = Color(0xFF8E8E93);
   static const Color darkTextTertiary = Color(0xFF636366);
   
@@ -78,5 +78,9 @@ class AppColors {
   
   // Dark Theme Card & Container
   static const Color darkCardBackground = Color.fromARGB(255, 28, 29, 30);
-  static const Color darkCardBorder = Color.fromARGB(255, 248, 214, 21);
+  static const Color darkCardBorder = Color.fromARGB(255, 14, 226, 250);
+
+  // Tambahkan di bagian Dark Theme Colors
+  static const Color darkIcon = Color.fromARGB(255, 14, 226, 250); // misal kuning terang
+  
 }

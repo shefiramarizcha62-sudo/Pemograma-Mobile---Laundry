@@ -10,6 +10,9 @@ abstract class Routes {
   static const NOTE_FORM = _Paths.NOTE_FORM;
   static const TODO_LIST = _Paths.TODO_LIST;
   static const TODO_FORM = _Paths.TODO_FORM;
+  static const ORDER = '/order';
+  static const NETWORK_LOCATION = '/network-location';
+  static const GPS_LOCATION = '/gps-location';
 }
 
 abstract class _Paths {

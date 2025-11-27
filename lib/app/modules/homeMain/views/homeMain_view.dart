@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../../core/values/app_colors.dart';
 import '../../../core/values/app_strings.dart';
+import '../../../core/values/app_colors.dart';
 import '../../../data/providers/theme_provider.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../controllers/homeMain_controllers.dart';
+import '../../order/views/order_view.dart';
+import '../../location/views/gps_location_view.dart';
+import '../../location/controllers/gps_location_controller.dart';
+import '../../location/controllers/network_location_controller.dart';
+import '../../location/views/network_location_view.dart';
+import '../../location/views/network_location_view.dart';
+import '../../location/controllers/network_location_controller.dart';
 
 class HomeMainView extends GetView<HomeMainController> {
   const HomeMainView({super.key});
@@ -14,98 +21,155 @@ class HomeMainView extends GetView<HomeMainController> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final themeProvider = Get.find<ThemeProvider>();
+    final networkController = Get.put(NetworkLocationController());
 
-    // Menampilkan welcome card sekali ketika widget ditampilkan
     WidgetsBinding.instance.addPostFrameCallback((_) {
       controller.isWelcomeShown(true);
     });
 
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.refresh_rounded),
-          tooltip: 'Reload API Data',
-          onPressed: controller.fetchDataFromApi,
-        ),
-        centerTitle: true,
-        title: const Text('Gangnam Laundry'),
-        actions: [
-          // Tombol theme toggle
-          Obx(() => IconButton(
-                icon: Icon(
-                  themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode,
-                ),
-                tooltip: themeProvider.isDarkMode ? 'Light Mode' : 'Dark Mode',
-                onPressed: themeProvider.toggleTheme,
-              )),
-          // Profile popup
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.account_circle_rounded),
-            itemBuilder: (context) => [
-              PopupMenuItem<String>(
-                enabled: false,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      AppStrings.loggedIn,
-                      style: theme.textTheme.bodySmall
-                          ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      controller.userEmail ?? '-',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const PopupMenuDivider(),
-              PopupMenuItem<String>(
-                value: 'logout',
-                child: Row(
-                  children: [
-                    Icon(Icons.logout, color: theme.colorScheme.error),
-                    const SizedBox(width: 8),
-                    const Text(AppStrings.logout),
-                  ],
-                ),
-              ),
-            ],
-            onSelected: (value) {
-              if (value == 'logout') {
-                Get.find<AuthController>().logout();
-              }
-            },
-          ),
-        ],
-      ),
+    // Inisialisasi controller network
+    if (!Get.isRegistered<NetworkLocationController>()) {
+      Get.put(NetworkLocationController());
+    }
 
-      body: Padding(
+    final hargaList = ['Rp. 10.000', 'Rp. 10.000', 'Rp. 15.000', 'Rp. 20.000'];
+    final descList = ['Wash Only', 'Dry Only', 'Iron Only', 'Full Services'];
+
+    return Scaffold(
+      body: SafeArea(
+        child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // Welcome Card
-            Obx(() => controller.isWelcomeShown.value
-                ? _WelcomeCard(userEmail: controller.userEmail ?? '-', theme: theme)
-                : const SizedBox.shrink()),
+            // Header + welcome
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: theme.cardColor,
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  IconButton(
+                    icon: Icon(
+                      Icons.refresh_rounded,
+                      color: themeProvider.isDarkMode
+                          ? AppColors.darkIcon
+                          : theme.colorScheme.primary,
+                    ),
+                    tooltip: 'Reload API Data',
+                    onPressed: controller.fetchDataFromApi,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          controller.userEmail ?? '-',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: themeProvider.isDarkMode
+                                ? AppColors.darkTextPrimary
+                                : AppColors.textPrimary,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        GestureDetector(
+                          onTap: () {
+                            Get.to(() => NetworkLocationView());
+                          },
+                          child: Obx(() {
+                            return Text(
+                              networkController.isLoading
+                                  ? 'Mendapatkan lokasi...'
+                                  : networkController.address.value.isEmpty
+                                      ? 'Lokasi kamu'
+                                      : networkController.address.value,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: themeProvider.isDarkMode
+                                    ? AppColors.darkIcon
+                                    : theme.colorScheme.primary,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            );
+                          }),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      Obx(
+                        () => IconButton(
+                          icon: Icon(
+                            themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode,
+                            color: themeProvider.isDarkMode
+                                ? AppColors.darkIcon
+                                : theme.colorScheme.primary,
+                          ),
+                          tooltip: themeProvider.isDarkMode ? 'Light Mode' : 'Dark Mode',
+                          onPressed: themeProvider.toggleTheme,
+                        ),
+                      ),
+                      Obx(
+                        () => IconButton(
+                          icon: Icon(
+                            Icons.location_on,
+                            color: themeProvider.isDarkMode
+                                ? AppColors.darkIcon
+                                : theme.colorScheme.primary,
+                          ),
+                          onPressed: () {
+                            if (!Get.isRegistered<GpsLocationController>()) {
+                              Get.put(GpsLocationController());
+                            }
+                            Get.to(() => GpsLocationView());
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
             const SizedBox(height: 12),
 
-            // Search Field
+            // Search
             TextField(
               controller: controller.searchController,
               decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.search, color: Colors.white),
+                prefixIcon: Icon(
+                  Icons.search,
+                  color: themeProvider.isDarkMode
+                      ? AppColors.darkIcon
+                      : AppColors.primary,
+                ),
                 hintText: 'Cari layanan...',
-                hintStyle: const TextStyle(color: Colors.white70),
-                suffixIcon: Obx(() => controller.searchQuery.value.isEmpty
-                    ? const SizedBox.shrink()
-                    : IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: controller.clearSearch,
-                      )),
+                hintStyle: TextStyle(
+                  color: themeProvider.isDarkMode
+                      ? AppColors.darkIcon
+                      : AppColors.primary,
+                ),
+                suffixIcon: Obx(
+                  () => controller.searchQuery.value.isEmpty
+                      ? const SizedBox.shrink()
+                      : IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: controller.clearSearch,
+                        ),
+                ),
                 filled: true,
                 fillColor: Colors.grey.withOpacity(0.2),
                 border: OutlineInputBorder(
@@ -113,34 +177,32 @@ class HomeMainView extends GetView<HomeMainController> {
                 ),
               ),
             ),
+
             const SizedBox(height: 12),
 
-            // Bagian scrollable: promo + list API
+            // Scroll area
             Expanded(
               child: RefreshIndicator(
                 onRefresh: controller.fetchProductsWithProgress,
                 child: ListView(
                   padding: EdgeInsets.zero,
                   children: [
-                    // Promo PNG responsif
                     LayoutBuilder(
                       builder: (context, constraints) {
                         final width = constraints.maxWidth;
-                        final height;
-                        if (width < 400) {
-                          height = 150; // layar kecil
-                        } else if (width < 600) {
-                          height = 200; // layar menengah
-                        } else if (width < 800) {
-                          height = 300; // layar besar
-                        } else {
-                          height = 400; // layar ekstra besar
-                        }
+                        final height = width < 400
+                            ? 150.0
+                            : width < 600
+                                ? 200.0
+                                : width < 800
+                                    ? 300.0
+                                    : 400.0;
+
                         return Container(
                           width: double.infinity,
                           height: height,
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: theme.cardColor,
                             borderRadius: BorderRadius.circular(15),
                             boxShadow: [
                               BoxShadow(
@@ -160,9 +222,9 @@ class HomeMainView extends GetView<HomeMainController> {
                         );
                       },
                     ),
+
                     const SizedBox(height: 12),
 
-                    // List API
                     Obx(() {
                       if (controller.isLoading.value) {
                         return const Center(child: CircularProgressIndicator());
@@ -183,53 +245,84 @@ class HomeMainView extends GetView<HomeMainController> {
                         separatorBuilder: (_, __) => const SizedBox(height: 8),
                         itemBuilder: (context, index) {
                           final item = controller.filteredProduk[index];
+
                           return Card(
                             child: InkWell(
-                              onTap: controller.goToHome,
+                              onTap: () {
+                                Get.to(() => OrderPage(), arguments: item['nama']);
+                              },
                               borderRadius: BorderRadius.circular(12),
                               child: Padding(
                                 padding: const EdgeInsets.all(12),
                                 child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.center,
                                   children: [
-                                    // Ikon lokal
                                     Container(
                                       padding: const EdgeInsets.all(10),
                                       child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(12),
+                                        borderRadius:
+                                            BorderRadius.circular(12),
                                         child: Image.asset(
-                                          controller.assetImages[
-                                              index % controller.assetImages.length],
+                                          controller.assetImages[index %
+                                              controller.assetImages.length],
                                           width: 50,
                                           height: 50,
                                           fit: BoxFit.cover,
                                         ),
                                       ),
                                     ),
+
                                     const SizedBox(width: 12),
-                                    // Nama + Harga
+
                                     Expanded(
                                       child: Column(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            item['nama'],
-                                            style: theme.textTheme.titleMedium
+                                            item['nama'] ?? 'Tanpa Nama',
+                                            style: theme
+                                                .textTheme.titleMedium
                                                 ?.copyWith(
-                                                    fontWeight: FontWeight.w600),
+                                              fontWeight: FontWeight.w600,
+                                            ),
                                           ),
+                                          const SizedBox(height: 4),
                                           Text(
-                                            "Rp ${item['harga']}",
-                                            style: theme.textTheme.labelLarge,
+                                            descList[index %
+                                                descList.length],
+                                            style: theme
+                                                .textTheme.bodySmall
+                                                ?.copyWith(
+                                              color: Colors.grey,
+                                            ),
                                           ),
                                         ],
                                       ),
                                     ),
-                                    Icon(
-                                      Icons.arrow_forward_ios,
-                                      size: 14,
-                                      color: theme.colorScheme.onSurfaceVariant,
+
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
+                                      children: [
+                                        Text(
+                                          hargaList[index %
+                                              hargaList.length],
+                                          style: theme
+                                              .textTheme.bodyMedium
+                                              ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Icon(
+                                          Icons.arrow_forward_ios,
+                                          size: 14,
+                                          color: theme.colorScheme
+                                              .onSurfaceVariant,
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
@@ -246,24 +339,76 @@ class HomeMainView extends GetView<HomeMainController> {
           ],
         ),
       ),
+      ),
 
+      // === BOTTOM NAV ===
       bottomNavigationBar: Obx(
         () => BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
-          selectedItemColor: theme.colorScheme.primary,
-          unselectedItemColor: Colors.grey,
+          selectedItemColor: themeProvider.isDarkMode
+              ? AppColors.darkIcon
+              : theme.colorScheme.primary,
+          unselectedItemColor: themeProvider.isDarkMode
+              ? AppColors.darkTextSecondary
+              : Colors.grey,
           currentIndex: controller.selectedIndex.value,
           onTap: (index) {
-            controller.selectedIndex.value = index;
+            if (index == 3) {
+              final authController = Get.find<AuthController>();
+
+              showMenu<String>(
+                context: context,
+                position: RelativeRect.fromLTRB(
+                  MediaQuery.of(context).size.width - 150,
+                  MediaQuery.of(context).size.height -
+                      kBottomNavigationBarHeight -
+                      120,
+                  16,
+                  0,
+                ),
+                items: [
+                  PopupMenuItem<String>(
+                    enabled: false,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(AppStrings.loggedIn,
+                            style: theme.textTheme.bodySmall),
+                        const SizedBox(height: 4),
+                        Text(
+                          controller.userEmail ?? '-',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuDivider(),
+                  PopupMenuItem<String>(
+                    value: 'logout',
+                    child: Row(
+                      children: [
+                        Icon(Icons.logout, color: theme.colorScheme.error),
+                        const SizedBox(width: 8),
+                        const Text(AppStrings.logout),
+                      ],
+                    ),
+                  ),
+                ],
+              ).then((value) {
+                if (value == 'logout') {
+                  Get.find<AuthController>().logout();
+                }
+              });
+            } else {
+              controller.selectedIndex.value = index;
+            }
           },
           items: const [
             BottomNavigationBarItem(
               icon: Icon(Icons.home),
               label: 'Home',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.receipt_long),
-              label: 'Order',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.list_alt),
@@ -280,68 +425,6 @@ class HomeMainView extends GetView<HomeMainController> {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _WelcomeCard extends StatelessWidget {
-  final String userEmail;
-  final ThemeData theme;
-
-  const _WelcomeCard({
-    required this.userEmail,
-    required this.theme,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          gradient: LinearGradient(
-            colors: [
-              theme.colorScheme.primary,
-              theme.colorScheme.primary.withOpacity(0.75),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.waving_hand, color: Colors.white, size: 28),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    AppStrings.welcomeBack,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    userEmail,
-                    style: theme.textTheme.bodyMedium
-                        ?.copyWith(color: Colors.white.withOpacity(0.9)),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+    ); // END SCAFFOLD
+  } // END BUILD
+} // END CLASS
