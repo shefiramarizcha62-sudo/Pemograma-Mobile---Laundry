@@ -8,7 +8,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:my_app/app/core/theme/app_theme.dart';
 import 'package:my_app/app/core/values/app_strings.dart';
 import 'package:my_app/app/core/values/app_colors.dart';
-
+import 'package:my_app/app/modules/auth/controllers/auth_controller.dart';
 
 // Services
 import 'package:my_app/app/data/services/api_service.dart';
@@ -50,6 +50,7 @@ Future<void> main() async {
     Get.put(StorageService());
     await Get.putAsync(() => LocalStorageService().init());
     Get.put(TodoProvider());
+     Get.put(AuthController());
 
     // 🔹 Theme Provider (HANYA SEKALI)
     final themeProvider = Get.put(ThemeProvider());

@@ -42,23 +42,16 @@ class _RegisterViewState extends State<RegisterView> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   // App Icon
-                  Icon(
-                    Icons.local_laundry_service,
-                    size: 120,
-                    color: Theme.of(context).colorScheme.primary,
+                  Image.asset(
+                    'assets/logo_laundry.png',
+                    width: 200,
+                    height: 200,
+                    fit: BoxFit.contain,
                   ),
+
                   const SizedBox(height: 12),
 
-                  // Title
-                  Text(
-                    'Gangnam Laundry',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
+                  
 
                   // Subtitle
                   Text(

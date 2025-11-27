@@ -19,12 +19,16 @@ class HomeMainView extends GetView<HomeMainController> {
       controller.isWelcomeShown(true);
     });
 
+    final hargaList = ['Rp. 10.000', 'Rp. 10.000', 'Rp. 15.000', 'Rp. 20.000'];
+    final descList = ['Wash Only', 'Dry Only', 'Iron Only', 'Full Services'];
+
     return Scaffold(
-      body: Padding(
+      body: SafeArea(
+        child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // Header + Welcome Card horizontal
+            // Header + welcome
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
@@ -117,9 +121,10 @@ class HomeMainView extends GetView<HomeMainController> {
                 ],
               ),
             ),
+
             const SizedBox(height: 12),
 
-            // Search Field
+            // Search
             TextField(
               controller: controller.searchController,
               decoration: InputDecoration(
@@ -150,9 +155,10 @@ class HomeMainView extends GetView<HomeMainController> {
                 ),
               ),
             ),
+
             const SizedBox(height: 12),
 
-            // Bagian scrollable: promo + list API
+            // Scroll area
             Expanded(
               child: RefreshIndicator(
                 onRefresh: controller.fetchProductsWithProgress,
@@ -169,6 +175,7 @@ class HomeMainView extends GetView<HomeMainController> {
                                 : width < 800
                                     ? 300.0
                                     : 400.0;
+
                         return Container(
                           width: double.infinity,
                           height: height,
@@ -193,7 +200,9 @@ class HomeMainView extends GetView<HomeMainController> {
                         );
                       },
                     ),
+
                     const SizedBox(height: 12),
+
                     Obx(() {
                       if (controller.isLoading.value) {
                         return const Center(child: CircularProgressIndicator());
@@ -222,34 +231,74 @@ class HomeMainView extends GetView<HomeMainController> {
                               child: Padding(
                                 padding: const EdgeInsets.all(12),
                                 child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.center,
                                   children: [
                                     Container(
                                       padding: const EdgeInsets.all(10),
                                       child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(12),
+                                        borderRadius:
+                                            BorderRadius.circular(12),
                                         child: Image.asset(
-                                          controller.assetImages[
-                                              index % controller.assetImages.length],
+                                          controller.assetImages[index %
+                                              controller.assetImages.length],
                                           width: 50,
                                           height: 50,
                                           fit: BoxFit.cover,
                                         ),
                                       ),
                                     ),
+
                                     const SizedBox(width: 12),
+
                                     Expanded(
-                                      child: Text(
-                                        item['nama'] ?? 'Tanpa Nama',
-                                        style: theme.textTheme.titleMedium?.copyWith(
-                                          fontWeight: FontWeight.w600,
-                                        ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            item['nama'] ?? 'Tanpa Nama',
+                                            style: theme
+                                                .textTheme.titleMedium
+                                                ?.copyWith(
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            descList[index %
+                                                descList.length],
+                                            style: theme
+                                                .textTheme.bodySmall
+                                                ?.copyWith(
+                                              color: Colors.grey,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                    Icon(
-                                      Icons.arrow_forward_ios,
-                                      size: 14,
-                                      color: theme.colorScheme.onSurfaceVariant,
+
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
+                                      children: [
+                                        Text(
+                                          hargaList[index %
+                                              hargaList.length],
+                                          style: theme
+                                              .textTheme.bodyMedium
+                                              ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Icon(
+                                          Icons.arrow_forward_ios,
+                                          size: 14,
+                                          color: theme.colorScheme
+                                              .onSurfaceVariant,
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
@@ -266,8 +315,9 @@ class HomeMainView extends GetView<HomeMainController> {
           ],
         ),
       ),
+      ),
 
-      // Bottom Navigator dengan Profile popup
+      // === BOTTOM NAV ===
       bottomNavigationBar: Obx(
         () => BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
@@ -280,31 +330,26 @@ class HomeMainView extends GetView<HomeMainController> {
           currentIndex: controller.selectedIndex.value,
           onTap: (index) {
             if (index == 3) {
-              // Profile popup
-              final RenderBox bar = context.findRenderObject() as RenderBox;
-              final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
-              final position = RelativeRect.fromRect(
-                Rect.fromPoints(
-                  bar.localToGlobal(Offset.zero, ancestor: overlay),
-                  bar.localToGlobal(bar.size.bottomRight(Offset.zero), ancestor: overlay),
-                ),
-                Offset.zero & overlay.size,
-              );
+              final authController = Get.find<AuthController>();
 
               showMenu<String>(
                 context: context,
-                position: position,
+                position: RelativeRect.fromLTRB(
+                  MediaQuery.of(context).size.width - 150,
+                  MediaQuery.of(context).size.height -
+                      kBottomNavigationBarHeight -
+                      120,
+                  16,
+                  0,
+                ),
                 items: [
                   PopupMenuItem<String>(
                     enabled: false,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          AppStrings.loggedIn,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant),
-                        ),
+                        Text(AppStrings.loggedIn,
+                            style: theme.textTheme.bodySmall),
                         const SizedBox(height: 4),
                         Text(
                           controller.userEmail ?? '-',
@@ -356,6 +401,6 @@ class HomeMainView extends GetView<HomeMainController> {
           ],
         ),
       ),
-    );
-  }
-}
+    ); // END SCAFFOLD
+  } // END BUILD
+} // END CLASS
