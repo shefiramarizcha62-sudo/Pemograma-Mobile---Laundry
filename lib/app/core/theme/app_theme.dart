@@ -382,15 +382,7 @@ class AppTheme {
         ),
       ),
       
-      // Floating Action Button Theme
-      floatingActionButtonTheme: const FloatingActionButtonThemeData(
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        elevation: 4,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(16)),
-        ),
-      ),
+      
       
       // List Tile Theme
       listTileTheme: const ListTileThemeData(

@@ -5,12 +5,16 @@ import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:geocoding/geocoding.dart'; // <— WAJIB
 import '../../../data/services/location_service.dart';
+import '../../../data/providers/auth_provider.dart';
+
 
 /// Controller untuk GPS Location Tracker
 /// Menggunakan GPS dengan akurasi tinggi
 class GpsLocationController extends GetxController {
   final LocationService _locationService = LocationService();
+  final AuthProvider _auth = Get.find();
 
   // Observables
   final Rx<Position?> _currentPosition = Rx<Position?>(null);
@@ -19,6 +23,11 @@ class GpsLocationController extends GetxController {
   final RxBool _isTracking = false.obs;
   final Rx<LocationPermission> _permissionStatus =
       LocationPermission.denied.obs;
+    
+
+  // NEW — Email user & detail alamat
+  RxString userEmail = 'example@gmail.com'.obs;
+  RxString locationDetail = ''.obs;
 
   // FlutterMap Controller
   MapController? _mapController;
@@ -43,9 +52,7 @@ class GpsLocationController extends GetxController {
     if (_mapController == null || _isDisposed) {
       try {
         _mapController?.dispose();
-      } catch (e) {
-        // Ignore error saat dispose
-      }
+      } catch (_) {}
       _mapController = MapController();
       _isDisposed = false;
     }
@@ -67,12 +74,13 @@ class GpsLocationController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    userEmail.value = _auth.currentUser?.email ?? 'Unknown User';
     _isDisposed = false;
+
     try {
       _mapController?.dispose();
-    } catch (e) {
-      // Ignore error
-    }
+    } catch (_) {}
+
     _mapController = MapController();
     _initializeLocation();
   }
@@ -86,9 +94,9 @@ class GpsLocationController extends GetxController {
 
     try {
       _mapController?.dispose();
-    } catch (e) {
+    } catch (_) {
       if (kDebugMode) {
-        print('Error disposing map controller: $e');
+        print('Error disposing map controller');
       }
     } finally {
       _mapController = null;
@@ -101,27 +109,41 @@ class GpsLocationController extends GetxController {
     return !_isDisposed && _mapController != null;
   }
 
-  Future<void> _initializeLocation() async {
-    if (kDebugMode) {
-      print('═══════════════════════════════════════════════════════════');
-      print('🛰️ [GPS CONTROLLER] _initializeLocation() called');
-      print('🛰️ [GPS CONTROLLER] Will fetch FRESH position (no cache)');
-      print('═══════════════════════════════════════════════════════════');
+  // -----------------------------
+  // ⭐ NEW: Reverse Geocoding
+  // -----------------------------
+  Future<void> updateLocationDetail() async {
+    if (_currentPosition.value == null) {
+      locationDetail.value = '';
+      return;
     }
 
+    try {
+      final placemarks = await placemarkFromCoordinates(
+        _currentPosition.value!.latitude,
+        _currentPosition.value!.longitude,
+      );
+
+      final p = placemarks.first;
+
+      locationDetail.value =
+          '${p.street}, ${p.subLocality}, ${p.locality}, ${p.administrativeArea}';
+    } catch (e) {
+      locationDetail.value = 'Lokasi tidak ditemukan';
+    }
+  }
+
+  // -----------------------------------
+  //  INITIALIZE GPS  
+  // -----------------------------------
+  Future<void> _initializeLocation() async {
     try {
       _isLoading.value = true;
       _errorMessage.value = '';
 
-      // GPS memerlukan GPS service aktif
       bool isEnabled = await _locationService.isLocationServiceEnabled();
       if (!isEnabled) {
-        if (kDebugMode) {
-          print('❌ [GPS CONTROLLER] GPS service is not enabled');
-        }
-        throw Exception(
-          'Location services are disabled. Please enable GPS in Settings.',
-        );
+        throw Exception('Location services are disabled. Please enable GPS.');
       }
 
       _permissionStatus.value = await _locationService.checkPermission();
@@ -131,369 +153,145 @@ class GpsLocationController extends GetxController {
         await requestPermission();
       }
 
-      // Langsung ambil posisi baru (tidak pakai cache)
-      // Ini memastikan data selalu fresh dan sesuai dengan GPS source
-      if (kDebugMode) {
-        print('🛰️ [GPS CONTROLLER] Fetching fresh position (no cache)...');
-      }
       await getCurrentPosition();
 
       _isLoading.value = false;
-    } on LocationServiceDisabledException catch (e) {
-      // Gunakan error message asli dari sistem
+    } catch (e) {
       _errorMessage.value = e.toString();
       _isLoading.value = false;
-      if (kDebugMode) {
-        print(
-          '❌ [GPS CONTROLLER] LocationServiceDisabledException: ${e.toString()}',
-        );
-      }
-    } on PermissionDeniedException catch (e) {
-      // Gunakan error message asli dari sistem
-      _errorMessage.value = e.toString();
-      _isLoading.value = false;
-      if (kDebugMode) {
-        print('❌ [GPS CONTROLLER] PermissionDeniedException: ${e.toString()}');
-      }
-    } on TimeoutException catch (e) {
-      // Gunakan error message asli dari sistem
-      _errorMessage.value = e.toString();
-      _isLoading.value = false;
-      if (kDebugMode) {
-        print('❌ [GPS CONTROLLER] TimeoutException: ${e.toString()}');
-      }
-    } catch (e, stackTrace) {
-      // Gunakan error message asli dari sistem
-      _errorMessage.value = e.toString();
-      _isLoading.value = false;
-      if (kDebugMode) {
-        print(
-          '❌ [GPS CONTROLLER] Location initialization error: ${e.toString()}',
-        );
-        print('❌ [GPS CONTROLLER] Stack trace: $stackTrace');
-      }
     }
   }
 
+  // -----------------------------------
+  // REQUEST PERMISSION
+  // -----------------------------------
   Future<void> requestPermission() async {
     try {
       _isLoading.value = true;
       _errorMessage.value = '';
 
-      // Cek GPS service dulu
       bool isGpsEnabled = await _locationService.isLocationServiceEnabled();
       if (!isGpsEnabled) {
-        throw Exception(
-          'Location services are disabled. Please enable GPS in Settings.',
-        );
+        throw Exception('GPS tidak aktif. Aktifkan di pengaturan.');
       }
 
-      bool granted = await _locationService.requestPermission(
-        requireGps: true, // GPS memerlukan GPS service
-      );
+      bool granted = await _locationService.requestPermission(requireGps: true);
       _permissionStatus.value = await _locationService.checkPermission();
 
       if (!granted) {
-        // Throw exception dengan message dari permission status
-        final status = await _locationService.checkPermission();
-        if (status == LocationPermission.deniedForever) {
-          throw PermissionDeniedException(
-            'Location permission permanently denied',
-          );
-        } else {
-          throw PermissionDeniedException('Location permission denied');
-        }
-      } else {
-        _errorMessage.value = '';
-        await getCurrentPosition();
+        throw PermissionDeniedException('Location permission denied');
       }
 
+      await getCurrentPosition();
+
       _isLoading.value = false;
-    } on LocationServiceDisabledException catch (e) {
-      // Gunakan error message asli dari sistem
+    } catch (e) {
       _errorMessage.value = e.toString();
       _isLoading.value = false;
-      if (kDebugMode) {
-        print(
-          '❌ [GPS CONTROLLER] LocationServiceDisabledException: ${e.toString()}',
-        );
-      }
-    } on PermissionDeniedException catch (e) {
-      // Gunakan error message asli dari sistem
-      _errorMessage.value = e.toString();
-      _isLoading.value = false;
-      if (kDebugMode) {
-        print('❌ [GPS CONTROLLER] PermissionDeniedException: ${e.toString()}');
-      }
-    } catch (e, stackTrace) {
-      // Gunakan error message asli dari sistem
-      _errorMessage.value = e.toString();
-      _isLoading.value = false;
-      if (kDebugMode) {
-        print('❌ [GPS CONTROLLER] Request permission error: ${e.toString()}');
-        print('❌ [GPS CONTROLLER] Stack trace: $stackTrace');
-      }
     }
   }
-
-  Future<void> openLocationSettings() async {
+     Future<void> openLocationSettings() async {
     await _locationService.openLocationSettings();
   }
 
   Future<void> openAppSettings() async {
     await _locationService.openAppSettings();
   }
-
+  // -----------------------------------
+  // GET CURRENT POSITION (GPS ONLY)
+  // -----------------------------------
   Future<void> getCurrentPosition() async {
-    if (kDebugMode) {
-      print('═══════════════════════════════════════════════════════════');
-      print('🛰️ [GPS CONTROLLER] getCurrentPosition() called');
-      print('🛰️ [GPS CONTROLLER] useGps parameter: true (GPS ONLY)');
-      print('═══════════════════════════════════════════════════════════');
-    }
-
     try {
       _isLoading.value = true;
       _errorMessage.value = '';
 
-      // Cek GPS service dulu
-      if (kDebugMode) {
-        print('🛰️ [GPS CONTROLLER] Checking GPS service status...');
-      }
       bool isGpsEnabled = await _locationService.isLocationServiceEnabled();
       if (!isGpsEnabled) {
-        if (kDebugMode) {
-          print('❌ [GPS CONTROLLER] GPS service is not enabled');
-        }
-        throw Exception(
-          'Location services are disabled. Please enable GPS in Settings.',
-        );
-      }
-      if (kDebugMode) {
-        print('✅ [GPS CONTROLLER] GPS service is enabled');
+        throw Exception('GPS tidak aktif');
       }
 
-      // Cek permission
       bool hasPermission = await _locationService.isPermissionGranted();
       if (!hasPermission) {
-        if (kDebugMode) {
-          print('❌ [GPS CONTROLLER] Permission not granted');
-        }
-        throw PermissionDeniedException(
-          'Location permission denied. Please grant location permission.',
-        );
+        throw PermissionDeniedException('Location permission denied');
       }
 
-      if (kDebugMode) {
-        print(
-          '🛰️ [GPS CONTROLLER] Calling LocationService.getCurrentPosition(useGps: true)',
-        );
+      Position? position =
+          await _locationService.getCurrentPosition(useGps: true);
+
+      if (position == null) {
+        throw Exception('Failed to get current position');
       }
 
-      Position? position = await _locationService.getCurrentPosition(
-        useGps: true, // Selalu GPS - HARUS TRUE
-      );
+      _currentPosition.value = position;
 
-      if (kDebugMode) {
-        if (position != null) {
-          print('✅ [GPS CONTROLLER] Position received');
-          print('🛰️ [GPS CONTROLLER] Accuracy: ${position.accuracy}m');
-          print(
-            '🛰️ [GPS CONTROLLER] Lat: ${position.latitude}, Lng: ${position.longitude}',
-          );
-          if (position.accuracy > 100) {
-            print(
-              '⚠️ [GPS CONTROLLER] WARNING: High accuracy (>100m) suggests NETWORK was used!',
-            );
-            print(
-              '⚠️ [GPS CONTROLLER] This should not happen for GPS provider!',
-            );
-          } else {
-            print(
-              '✅ [GPS CONTROLLER] Low accuracy (<100m) confirms GPS source',
-            );
-          }
-        } else {
-          print('❌ [GPS CONTROLLER] No position received');
-        }
-        print('═══════════════════════════════════════════════════════════');
-      }
+      // 🔥 UPDATE DETAIL ALAMAT SEKALIGUS
+      await updateLocationDetail();  // <— HERE
 
-      if (position != null) {
-        _currentPosition.value = position;
-        _updateMapPosition(position);
-        _errorMessage.value = '';
-      } else {
-        throw Exception('Failed to get current position: Position is null');
-      }
-
+      _updateMapPosition(position);
       _isLoading.value = false;
-    } on PermissionDeniedException catch (e) {
-      // Gunakan error message asli dari sistem
+    } catch (e) {
       _errorMessage.value = e.toString();
       _isLoading.value = false;
-      if (kDebugMode) {
-        print('❌ [GPS CONTROLLER] PermissionDeniedException: ${e.toString()}');
-      }
-    } on LocationServiceDisabledException catch (e) {
-      // Gunakan error message asli dari sistem
-      _errorMessage.value = e.toString();
-      _isLoading.value = false;
-      if (kDebugMode) {
-        print(
-          '❌ [GPS CONTROLLER] LocationServiceDisabledException: ${e.toString()}',
-        );
-      }
-    } on TimeoutException catch (e) {
-      // Gunakan error message asli dari sistem
-      _errorMessage.value = e.toString();
-      _isLoading.value = false;
-      if (kDebugMode) {
-        print('❌ [GPS CONTROLLER] TimeoutException: ${e.toString()}');
-      }
-    } catch (e, stackTrace) {
-      // Gunakan error message asli dari sistem
-      _errorMessage.value = e.toString();
-      _isLoading.value = false;
-      if (kDebugMode) {
-        print('❌ [GPS CONTROLLER] Get current position error: ${e.toString()}');
-        print('❌ [GPS CONTROLLER] Stack trace: $stackTrace');
-      }
     }
   }
 
   Future<void> getLastKnownPosition() async {
     try {
       Position? position = await _locationService.getLastKnownPosition();
-
       if (position != null) {
         _currentPosition.value = position;
+        await updateLocationDetail(); // <—
         _updateMapPosition(position);
       }
-    } catch (e) {
-      if (kDebugMode) {
-        print('Get last known position error: $e');
-      }
-    }
+    } catch (_) {}
   }
 
+  // -----------------------------------
+  // START TRACKING (STREAM)
+  // -----------------------------------
   Future<void> startTracking() async {
-    if (kDebugMode) {
-      print('═══════════════════════════════════════════════════════════');
-      print('🛰️ [GPS CONTROLLER] startTracking() called');
-      print('🛰️ [GPS CONTROLLER] useGps parameter: true (GPS ONLY)');
-      print('═══════════════════════════════════════════════════════════');
-    }
-
     try {
-      // Cek GPS service dulu
-      if (kDebugMode) {
-        print('🛰️ [GPS CONTROLLER] Checking GPS service status...');
-      }
       bool isGpsEnabled = await _locationService.isLocationServiceEnabled();
       if (!isGpsEnabled) {
-        if (kDebugMode) {
-          print('❌ [GPS CONTROLLER] GPS service is not enabled');
-        }
-        throw Exception(
-          'Location services are disabled. Please enable GPS in Settings to start tracking.',
-        );
-      }
-      if (kDebugMode) {
-        print('✅ [GPS CONTROLLER] GPS service is enabled');
+        throw Exception('GPS tidak aktif');
       }
 
-      // Cek permission dulu
       bool hasPermission = await _locationService.isPermissionGranted();
       if (!hasPermission) {
-        // Request permission jika belum granted
-        if (kDebugMode) {
-          print(
-            '🛰️ [GPS CONTROLLER] Requesting permission (requireGps: true)',
-          );
-        }
-        hasPermission = await _locationService.requestPermission(
-          requireGps: true, // GPS memerlukan GPS service - HARUS TRUE
-        );
+        hasPermission =
+            await _locationService.requestPermission(requireGps: true);
       }
 
       if (!hasPermission) {
-        // Throw exception dengan message dari permission status
-        final status = await _locationService.checkPermission();
-        if (status == LocationPermission.deniedForever) {
-          throw PermissionDeniedException(
-            'Location permission permanently denied',
-          );
-        } else {
-          throw PermissionDeniedException('Location permission denied');
-        }
+        throw PermissionDeniedException('Permission denied');
       }
 
       _isTracking.value = true;
       _errorMessage.value = '';
 
-      if (kDebugMode) {
-        print('🛰️ [GPS CONTROLLER] Starting position stream (useGps: true)');
-      }
-
-      Stream<Position>? positionStream = _locationService.getPositionStream(
-        useGps: true, // Selalu GPS - HARUS TRUE
+      Stream<Position>? stream = _locationService.getPositionStream(
+        useGps: true,
         distanceFilter: 10,
       );
 
-      if (positionStream != null) {
-        _positionSubscription?.cancel();
-        _positionSubscription = positionStream.listen(
-          (Position position) {
-            _currentPosition.value = position;
-            _updateMapPosition(position);
-          },
-          onError: (error) {
-            // Gunakan error message asli dari sistem
-            _errorMessage.value = error.toString();
-            if (kDebugMode) {
-              print(
-                '❌ [GPS CONTROLLER] Position stream error: ${error.toString()}',
-              );
-            }
-          },
-        );
-      } else {
-        throw Exception(
-          'Failed to start position stream: Position stream is null',
-        );
-      }
-    } on LocationServiceDisabledException catch (e) {
-      // Gunakan error message asli dari sistem
+      _positionSubscription?.cancel();
+
+      _positionSubscription = stream?.listen(
+        (Position pos) async {
+          _currentPosition.value = pos;
+
+          // 🔥 UPDATE ALAMAT SAAT TRACKING
+          await updateLocationDetail(); // <—
+
+          _updateMapPosition(pos);
+        },
+        onError: (err) {
+          _errorMessage.value = err.toString();
+        },
+      );
+    } catch (e) {
       _errorMessage.value = e.toString();
       _isTracking.value = false;
-      if (kDebugMode) {
-        print(
-          '❌ [GPS CONTROLLER] LocationServiceDisabledException: ${e.toString()}',
-        );
-      }
-    } on PermissionDeniedException catch (e) {
-      // Gunakan error message asli dari sistem
-      _errorMessage.value = e.toString();
-      _isTracking.value = false;
-      if (kDebugMode) {
-        print('❌ [GPS CONTROLLER] PermissionDeniedException: ${e.toString()}');
-      }
-    } on TimeoutException catch (e) {
-      // Gunakan error message asli dari sistem
-      _errorMessage.value = e.toString();
-      _isTracking.value = false;
-      if (kDebugMode) {
-        print('❌ [GPS CONTROLLER] TimeoutException: ${e.toString()}');
-      }
-    } catch (e, stackTrace) {
-      // Gunakan error message asli dari sistem
-      _errorMessage.value = e.toString();
-      _isTracking.value = false;
-      if (kDebugMode) {
-        print('❌ [GPS CONTROLLER] Start tracking error: ${e.toString()}');
-        print('❌ [GPS CONTROLLER] Stack trace: $stackTrace');
-      }
     }
   }
 
@@ -504,9 +302,7 @@ class GpsLocationController extends GetxController {
     _locationService.stopPositionStream();
   }
 
-  void stopTracking() {
-    _stopTracking();
-  }
+  void stopTracking() => _stopTracking();
 
   void _updateMapPosition(Position position) {
     if (_isDisposed || !_canUseMapController()) return;
@@ -516,11 +312,7 @@ class GpsLocationController extends GetxController {
 
     try {
       _mapController?.move(newCenter, _mapZoom.value);
-    } catch (e) {
-      if (kDebugMode) {
-        print('Map controller not ready yet: $e');
-      }
-    }
+    } catch (_) {}
   }
 
   void updateMapCenter(LatLng center, double zoom) {
@@ -533,6 +325,7 @@ class GpsLocationController extends GetxController {
     if (_isDisposed || !_canUseMapController()) return;
 
     _mapZoom.value = zoom;
+
     if (_currentPosition.value != null) {
       try {
         _mapController?.move(
@@ -542,51 +335,33 @@ class GpsLocationController extends GetxController {
           ),
           zoom,
         );
-      } catch (e) {
-        if (kDebugMode) {
-          print('Map controller not ready for zoom: $e');
-        }
-      }
+      } catch (_) {}
     }
   }
 
-  void zoomIn() {
-    final newZoom = (_mapZoom.value + 1).clamp(3.0, 18.0);
-    setZoom(newZoom);
-  }
+  void zoomIn() => setZoom((_mapZoom.value + 1).clamp(3.0, 18.0));
 
-  void zoomOut() {
-    final newZoom = (_mapZoom.value - 1).clamp(3.0, 18.0);
-    setZoom(newZoom);
-  }
+  void zoomOut() => setZoom((_mapZoom.value - 1).clamp(3.0, 18.0));
 
   void moveToCurrentPosition() {
     if (_isDisposed || !_canUseMapController()) return;
 
     if (_currentPosition.value != null) {
       try {
-        final position = _currentPosition.value!;
-        final center = LatLng(position.latitude, position.longitude);
+        final pos = _currentPosition.value!;
+        final center = LatLng(pos.latitude, pos.longitude);
         _mapController?.move(center, _mapZoom.value);
         _mapCenter.value = center;
-      } catch (e) {
-        if (kDebugMode) {
-          print('Map controller not ready for move: $e');
-        }
-      }
+      } catch (_) {}
     }
   }
 
-  Future<void> refreshPosition() async {
-    await getCurrentPosition();
-  }
+  Future<void> refreshPosition() async => await getCurrentPosition();
 
   void resetMapController() {
     try {
       _mapController?.dispose();
-    } catch (e) {
-      // Ignore error
-    }
+    } catch (_) {}
     _mapController = MapController();
     _isDisposed = false;
   }
@@ -603,7 +378,6 @@ class GpsLocationController extends GetxController {
   Map<String, dynamic> getErrorAction() {
     final error = _errorMessage.value.toLowerCase();
 
-    // GPS service disabled - buka location settings
     if (error.contains('disabled') ||
         error.contains('enable gps') ||
         error.contains('location services')) {
@@ -614,7 +388,6 @@ class GpsLocationController extends GetxController {
       };
     }
 
-    // Permission permanently denied - buka app settings
     if (error.contains('permanently denied') ||
         error.contains('deniedforever')) {
       return {
@@ -624,8 +397,7 @@ class GpsLocationController extends GetxController {
       };
     }
 
-    // Permission denied - request permission
-    if (error.contains('permission denied') || error.contains('permission')) {
+    if (error.contains('permission')) {
       return {
         'label': 'Berikan Izin Lokasi',
         'icon': Icons.location_on,
@@ -633,7 +405,6 @@ class GpsLocationController extends GetxController {
       };
     }
 
-    // Timeout - retry
     if (error.contains('timeout')) {
       return {
         'label': 'Coba Lagi',
@@ -642,7 +413,6 @@ class GpsLocationController extends GetxController {
       };
     }
 
-    // General error - retry
     return {
       'label': 'Coba Lagi',
       'icon': Icons.refresh,
