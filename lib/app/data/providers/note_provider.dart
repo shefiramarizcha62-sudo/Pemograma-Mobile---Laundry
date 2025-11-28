@@ -60,4 +60,3 @@ class NoteProvider extends GetxService {
     }
   }
 }
-

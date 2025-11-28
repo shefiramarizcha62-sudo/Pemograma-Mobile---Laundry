@@ -42,23 +42,23 @@ class AppStrings {
   static const String errorDeletingNote = 'Error deleting note';
 
   // Labels
-  static const String notes = 'Notes';
+   static const String notes = 'Orders';
   static const String noNotesYet = 'No notes yet';
   static const String tapToAddNote = 'Tap + to add your first note';
   static const String tapToAddTodo = 'Tap + to add your first task';
-  static const String addNote = 'Add Note';
-  static const String editNote = 'Edit Note';
-  static const String noteTitle = 'Note Title';
-  static const String noteContent = 'Note Content';
+  static const String addNote = 'Add customer';
+  static const String editNote = 'Edit customer';
   static const String loggedIn = 'Logged in';
   static const String confirmDelete = 'Confirm Delete';
   static const String cancel = 'Cancel';
   static const String delete = 'Delete';
   static const String edit = 'Edit';
   static const String update = 'Update';
-  static const String updateNote = 'Update Note';
-  static const String saveNote = 'Save Note';
-  static const String addImage = 'Add Image';
+  static const String updateNote = 'Update customer';
+  static const String saveNote = 'Simpan';
+    static const String noteTitle = 'Nama Customer';
+    static const String noteContent = 'Berat';
+    static const String addImage = 'Tambah Gambar';
   static const String changeImage = 'Change Image';
   static const String removeImage = 'Remove Image';
   static const String imagePreview = 'Image Preview';
