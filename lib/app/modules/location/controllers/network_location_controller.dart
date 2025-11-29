@@ -7,11 +7,13 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import '../../../data/services/location_service.dart';
 import 'package:geocoding/geocoding.dart';
+import '../../../data/providers/auth_provider.dart';
 
 /// Controller untuk Network Provider Location Tracker
 /// Menggunakan network provider saja (tanpa GPS)
 class NetworkLocationController extends GetxController {
   final LocationService _locationService = LocationService();
+  final AuthProvider _auth = Get.find();
 
   // Observables
   final Rx<Position?> _currentPosition = Rx<Position?>(null);
@@ -20,6 +22,10 @@ class NetworkLocationController extends GetxController {
   final RxBool _isTracking = false.obs;
   final Rx<LocationPermission> _permissionStatus = LocationPermission.denied.obs;
   final RxString address = ''.obs;
+
+  // NEW — Email user & detail alamat
+  RxString userEmail = 'example@gmail.com'.obs;
+  RxString locationDetail = ''.obs;
 
   // FlutterMap Controller
   MapController? _mapController;
@@ -68,11 +74,12 @@ class NetworkLocationController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    userEmail.value = _auth.currentUser?.email ?? 'Unknown User';
     _isDisposed = false;
     try {
       _mapController?.dispose();
     } catch (e) {
-      // Ignore error
+       // Ignore error
     }
     _mapController = MapController();
     _initializeLocation();
@@ -251,6 +258,8 @@ class NetworkLocationController extends GetxController {
         _updateMapPosition(position);
         _errorMessage.value = '';
         await updateAddress();
+        locationDetail.value = address.value;
+
       } else {
         // Jika null, berarti ada error yang tidak di-throw
         // Throw exception agar error message bisa ditangkap
