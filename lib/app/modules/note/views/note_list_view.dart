@@ -9,18 +9,12 @@ class NoteListView extends GetView<NoteController> {
 
   @override
   Widget build(BuildContext context) {
-    // If this view is navigated to from another page (e.g. OrderPage) the binding
-    // should have created the controller but there are situations where the
-    // controller state is empty (e.g. controller already existed but notes list empty).
-    // Ensure we load notes once after the first frame to make sure UI is populated.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (controller.notes.isEmpty && !controller.isLoading.value) {
         controller.loadNotes();
       }
-      // show small feedback if arguments were passed (e.g. machine name)
-      // navigation argument (e.g. machine name) is available via Get.arguments
-      // we don't show any popup when opening from OrderPage — UI loads silently
     });
+
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -82,6 +76,8 @@ class NoteListView extends GetView<NoteController> {
             padding: const EdgeInsets.all(16),
             itemCount: controller.notes.length + 2,
             itemBuilder: (context, index) {
+
+              // ====== BAGIAN FOTO PALING ATAS (index == 0) ======
               if (index == 0) {
                 return Container(
                   margin: const EdgeInsets.only(bottom: 12),
@@ -96,35 +92,22 @@ class NoteListView extends GetView<NoteController> {
                       ),
                     ],
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: SizedBox(
-                            width: 96,
-                            height: 96,
-                            child: Container(color: Colors.transparent),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        const Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              SizedBox.shrink(),
-                              SizedBox(height: 6),
-                              SizedBox.shrink(),
-                            ],
-                          ),
-                        )
-                      ],
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: SizedBox(
+                      height: 160, // tinggi bisa kamu ubah sesuka
+                      width: double.infinity,
+                      child: Image.asset(
+                        'assets/diskon.png',
+                        fit: BoxFit.cover, // FULL COVER
+                      ),
                     ),
                   ),
                 );
               }
 
+
+              // ====== TOMBOL TAMBAH ======
               if (index == 1) {
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
@@ -165,6 +148,7 @@ class NoteListView extends GetView<NoteController> {
                 );
               }
 
+              // ====== ITEM NOTE ======
               final note = controller.notes[index - 2];
               final imageUrl = note.imageUrl;
 
@@ -270,7 +254,6 @@ class NoteListView extends GetView<NoteController> {
         );
       }),
 
-      // ⛔ FAB DIHAPUS
       floatingActionButton: null,
     );
   }
