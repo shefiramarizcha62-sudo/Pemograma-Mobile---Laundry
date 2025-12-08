@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../routes/app_pages.dart';
 import '../../../core/values/app_strings.dart';
 import '../../../core/values/app_colors.dart';
 import '../../../data/providers/theme_provider.dart';
@@ -11,8 +12,6 @@ import '../../location/views/gps_location_view.dart';
 import '../../location/controllers/gps_location_controller.dart';
 import '../../location/controllers/network_location_controller.dart';
 import '../../location/views/network_location_view.dart';
-import '../../location/views/network_location_view.dart';
-import '../../location/controllers/network_location_controller.dart';
 
 class HomeMainView extends GetView<HomeMainController> {
   const HomeMainView({super.key});
@@ -38,307 +37,315 @@ class HomeMainView extends GetView<HomeMainController> {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            // Header + welcome
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: theme.cardColor,
-                borderRadius: BorderRadius.circular(10),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  IconButton(
-                    icon: Icon(
-                      Icons.refresh_rounded,
-                      color: themeProvider.isDarkMode
-                          ? AppColors.darkIcon
-                          : theme.colorScheme.primary,
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              // Header + welcome
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: theme.cardColor,
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
                     ),
-                    tooltip: 'Reload API Data',
-                    onPressed: controller.fetchDataFromApi,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  ],
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        Icons.refresh_rounded,
+                        color: themeProvider.isDarkMode
+                            ? AppColors.darkIcon
+                            : theme.colorScheme.primary,
+                      ),
+                      tooltip: 'Reload API Data',
+                      onPressed: controller.fetchDataFromApi,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            controller.userEmail ?? '-',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: themeProvider.isDarkMode
+                                  ? AppColors.darkTextPrimary
+                                  : AppColors.textPrimary,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          GestureDetector(
+                            onTap: () {
+                              Get.to(() => const NetworkLocationView());
+                            },
+                            child: Obx(() {
+                              return Text(
+                                networkController.isLoading
+                                    ? 'Mendapatkan lokasi...'
+                                    : networkController.address.value.isEmpty
+                                        ? 'Lokasi kamu'
+                                        : networkController.address.value,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: themeProvider.isDarkMode
+                                      ? AppColors.darkIcon
+                                      : theme.colorScheme.primary,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              );
+                            }),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Row(
                       children: [
-                        Text(
-                          controller.userEmail ?? '-',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: themeProvider.isDarkMode
-                                ? AppColors.darkTextPrimary
-                                : AppColors.textPrimary,
-                            fontSize: 14,
+                        Obx(
+                          () => IconButton(
+                            icon: Icon(
+                              themeProvider.isDarkMode
+                                  ? Icons.light_mode
+                                  : Icons.dark_mode,
+                              color: themeProvider.isDarkMode
+                                  ? AppColors.darkIcon
+                                  : theme.colorScheme.primary,
+                            ),
+                            tooltip: themeProvider.isDarkMode
+                                ? 'Light Mode'
+                                : 'Dark Mode',
+                            onPressed: themeProvider.toggleTheme,
                           ),
                         ),
-                        const SizedBox(height: 2),
-                        GestureDetector(
-                          onTap: () {
-                            Get.to(() => NetworkLocationView());
-                          },
-                          child: Obx(() {
-                            return Text(
-                              networkController.isLoading
-                                  ? 'Mendapatkan lokasi...'
-                                  : networkController.address.value.isEmpty
-                                      ? 'Lokasi kamu'
-                                      : networkController.address.value,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: themeProvider.isDarkMode
-                                    ? AppColors.darkIcon
-                                    : theme.colorScheme.primary,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            );
-                          }),
+                        Obx(
+                          () => IconButton(
+                            icon: Icon(
+                              Icons.location_on,
+                              color: themeProvider.isDarkMode
+                                  ? AppColors.darkIcon
+                                  : theme.colorScheme.primary,
+                            ),
+                            onPressed: () {
+                              if (!Get.isRegistered<GpsLocationController>()) {
+                                Get.put(GpsLocationController());
+                              }
+                              Get.to(() => const GpsLocationView());
+                            },
+                          ),
                         ),
                       ],
                     ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Search
+              TextField(
+                controller: controller.searchController,
+                decoration: InputDecoration(
+                  prefixIcon: Icon(
+                    Icons.search,
+                    color: themeProvider.isDarkMode
+                        ? AppColors.darkIcon
+                        : AppColors.primary,
                   ),
-                  Row(
+                  hintText: 'Cari layanan...',
+                  hintStyle: TextStyle(
+                    color: themeProvider.isDarkMode
+                        ? AppColors.darkIcon
+                        : AppColors.primary,
+                  ),
+                  suffixIcon: Obx(
+                    () => controller.searchQuery.value.isEmpty
+                        ? const SizedBox.shrink()
+                        : IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: controller.clearSearch,
+                          ),
+                  ),
+                  filled: true,
+                  fillColor: Colors.grey.withOpacity(0.2),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Scroll area
+              Expanded(
+                child: RefreshIndicator(
+                  onRefresh: controller.fetchProductsWithProgress,
+                  child: ListView(
+                    padding: EdgeInsets.zero,
                     children: [
-                      Obx(
-                        () => IconButton(
-                          icon: Icon(
-                            themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode,
-                            color: themeProvider.isDarkMode
-                                ? AppColors.darkIcon
-                                : theme.colorScheme.primary,
-                          ),
-                          tooltip: themeProvider.isDarkMode ? 'Light Mode' : 'Dark Mode',
-                          onPressed: themeProvider.toggleTheme,
-                        ),
-                      ),
-                      Obx(
-                        () => IconButton(
-                          icon: Icon(
-                            Icons.location_on,
-                            color: themeProvider.isDarkMode
-                                ? AppColors.darkIcon
-                                : theme.colorScheme.primary,
-                          ),
-                          onPressed: () {
-                            if (!Get.isRegistered<GpsLocationController>()) {
-                              Get.put(GpsLocationController());
-                            }
-                            Get.to(() => GpsLocationView());
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final width = constraints.maxWidth;
+                          final height = width < 400
+                              ? 150.0
+                              : width < 600
+                                  ? 200.0
+                                  : width < 800
+                                      ? 300.0
+                                      : 400.0;
 
-            const SizedBox(height: 12),
-
-            // Search
-            TextField(
-              controller: controller.searchController,
-              decoration: InputDecoration(
-                prefixIcon: Icon(
-                  Icons.search,
-                  color: themeProvider.isDarkMode
-                      ? AppColors.darkIcon
-                      : AppColors.primary,
-                ),
-                hintText: 'Cari layanan...',
-                hintStyle: TextStyle(
-                  color: themeProvider.isDarkMode
-                      ? AppColors.darkIcon
-                      : AppColors.primary,
-                ),
-                suffixIcon: Obx(
-                  () => controller.searchQuery.value.isEmpty
-                      ? const SizedBox.shrink()
-                      : IconButton(
-                          icon: const Icon(Icons.clear),
-                          onPressed: controller.clearSearch,
-                        ),
-                ),
-                filled: true,
-                fillColor: Colors.grey.withOpacity(0.2),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            // Scroll area
-            Expanded(
-              child: RefreshIndicator(
-                onRefresh: controller.fetchProductsWithProgress,
-                child: ListView(
-                  padding: EdgeInsets.zero,
-                  children: [
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        final width = constraints.maxWidth;
-                        final height = width < 400
-                            ? 150.0
-                            : width < 600
-                                ? 200.0
-                                : width < 800
-                                    ? 300.0
-                                    : 400.0;
-
-                        return Container(
-                          width: double.infinity,
-                          height: height,
-                          decoration: BoxDecoration(
-                            color: theme.cardColor,
-                            borderRadius: BorderRadius.circular(15),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(15),
-                            child: Image.asset(
-                              'assets/diskon.png',
-                              fit: BoxFit.contain,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    Obx(() {
-                      if (controller.isLoading.value) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                      if (controller.filteredProduk.isEmpty) {
-                        return Center(
-                          child: Text(
-                            'Tidak ada layanan. Tarik untuk memuat ulang.',
-                            style: theme.textTheme.bodyMedium,
-                          ),
-                        );
-                      }
-
-                      return ListView.separated(
-                        physics: const NeverScrollableScrollPhysics(),
-                        shrinkWrap: true,
-                        itemCount: controller.filteredProduk.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 8),
-                        itemBuilder: (context, index) {
-                          final item = controller.filteredProduk[index];
-
-                          return Card(
-                            child: InkWell(
-                              onTap: () {
-                                Get.to(() => OrderPage(), arguments: item['nama']);
-                              },
-                              borderRadius: BorderRadius.circular(12),
-                              child: Padding(
-                                padding: const EdgeInsets.all(12),
-                                child: Row(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.center,
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(10),
-                                      child: ClipRRect(
-                                        borderRadius:
-                                            BorderRadius.circular(12),
-                                        child: Image.asset(
-                                          controller.assetImages[index %
-                                              controller.assetImages.length],
-                                          width: 50,
-                                          height: 50,
-                                          fit: BoxFit.cover,
-                                        ),
-                                      ),
-                                    ),
-
-                                    const SizedBox(width: 12),
-
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            item['nama'] ?? 'Tanpa Nama',
-                                            style: theme
-                                                .textTheme.titleMedium
-                                                ?.copyWith(
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            descList[index %
-                                                descList.length],
-                                            style: theme
-                                                .textTheme.bodySmall
-                                                ?.copyWith(
-                                              color: Colors.grey,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.end,
-                                      children: [
-                                        Text(
-                                          hargaList[index %
-                                              hargaList.length],
-                                          style: theme
-                                              .textTheme.bodyMedium
-                                              ?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Icon(
-                                          Icons.arrow_forward_ios,
-                                          size: 14,
-                                          color: theme.colorScheme
-                                              .onSurfaceVariant,
-                                        ),
-                                      ],
-                                    ),
-                                  ],
+                          return Container(
+                            width: double.infinity,
+                            height: height,
+                            decoration: BoxDecoration(
+                              color: theme.cardColor,
+                              borderRadius: BorderRadius.circular(15),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 4),
                                 ),
+                              ],
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(15),
+                              child: Image.asset(
+                                'assets/diskon.png',
+                                fit: BoxFit.contain,
                               ),
                             ),
                           );
                         },
-                      );
-                    }),
-                  ],
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      Obx(() {
+                        if (controller.isLoading.value) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        }
+                        if (controller.filteredProduk.isEmpty) {
+                          return Center(
+                            child: Text(
+                              'Tidak ada layanan. Tarik untuk memuat ulang.',
+                              style: theme.textTheme.bodyMedium,
+                            ),
+                          );
+                        }
+
+                        return ListView.separated(
+                          physics: const NeverScrollableScrollPhysics(),
+                          shrinkWrap: true,
+                          itemCount: controller.filteredProduk.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: 8),
+                          itemBuilder: (context, index) {
+                            final item = controller.filteredProduk[index];
+
+                            return Card(
+                              child: InkWell(
+                                onTap: () {
+                                  Get.to(
+                                    () => const OrderPage(),
+                                    arguments: item['nama'],
+                                  );
+                                },
+                                borderRadius: BorderRadius.circular(12),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(12),
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(10),
+                                        child: ClipRRect(
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                          child: Image.asset(
+                                            controller.assetImages[index %
+                                                controller
+                                                    .assetImages.length],
+                                            width: 50,
+                                            height: 50,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              item['nama'] ?? 'Tanpa Nama',
+                                              style: theme
+                                                  .textTheme.titleMedium
+                                                  ?.copyWith(
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              descList[index %
+                                                  descList.length],
+                                              style: theme
+                                                  .textTheme.bodySmall
+                                                  ?.copyWith(
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.end,
+                                        children: [
+                                          Text(
+                                            hargaList[index %
+                                                hargaList.length],
+                                            style: theme
+                                                .textTheme.bodyMedium
+                                                ?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Icon(
+                                            Icons.arrow_forward_ios,
+                                            size: 14,
+                                            color: theme.colorScheme
+                                                .onSurfaceVariant,
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      }),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
       ),
 
       // === BOTTOM NAV ===
@@ -353,7 +360,13 @@ class HomeMainView extends GetView<HomeMainController> {
               : Colors.grey,
           currentIndex: controller.selectedIndex.value,
           onTap: (index) {
-            if (index == 3) {
+            if (index == 1) {
+              // 0 = Home
+              // 1 = Services  --> TODO LIST
+              // 2 = Notifications
+              // 3 = Profile
+              Get.toNamed(Routes.TODO_LIST);
+            } else if (index == 3) {
               final authController = Get.find<AuthController>();
 
               showMenu<String>(
@@ -372,12 +385,15 @@ class HomeMainView extends GetView<HomeMainController> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(AppStrings.loggedIn,
-                            style: theme.textTheme.bodySmall),
+                        Text(
+                          AppStrings.loggedIn,
+                          style: theme.textTheme.bodySmall,
+                        ),
                         const SizedBox(height: 4),
                         Text(
                           controller.userEmail ?? '-',
-                          style: theme.textTheme.bodyMedium?.copyWith(
+                          style:
+                              theme.textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -389,7 +405,8 @@ class HomeMainView extends GetView<HomeMainController> {
                     value: 'logout',
                     child: Row(
                       children: [
-                        Icon(Icons.logout, color: theme.colorScheme.error),
+                        Icon(Icons.logout,
+                            color: theme.colorScheme.error),
                         const SizedBox(width: 8),
                         const Text(AppStrings.logout),
                       ],
@@ -402,6 +419,7 @@ class HomeMainView extends GetView<HomeMainController> {
                 }
               });
             } else {
+              // 0 (Home) dan 2 (Notifications) tetap pakai selectedIndex biasa
               controller.selectedIndex.value = index;
             }
           },
@@ -415,8 +433,8 @@ class HomeMainView extends GetView<HomeMainController> {
               label: 'Services',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.campaign),
-              label: 'Promotions',
+              icon: Icon(Icons.notifications),
+              label: 'Notifications',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.person),
