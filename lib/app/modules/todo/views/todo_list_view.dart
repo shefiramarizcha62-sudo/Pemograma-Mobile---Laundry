@@ -18,62 +18,69 @@ class TodoListView extends GetView<TodoController> {
     final theme = Theme.of(context);
     final themeProvider = Get.find<ThemeProvider>();
     final authController = Get.find<AuthController>();
+
     final bool isDark = themeProvider.isDarkMode;
 
+    final Color darkSurface = theme.colorScheme.surface;
+    final Color darkCard = theme.colorScheme.surfaceVariant;
+
     return Scaffold(
+      // =====================================================
+      // APPBAR
+      // =====================================================
       appBar: AppBar(
-  backgroundColor: Colors.transparent,
-  elevation: 0,
-  automaticallyImplyLeading: false, // kita custom tombol back sendiri
-  titleSpacing: 0,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        automaticallyImplyLeading: false,
+        titleSpacing: 0,
+        title: Row(
+          children: [
+            const SizedBox(width: 12),
 
-  // ===== CUSTOM BACK BUTTON + TITLE =====
-  title: Row(
-    children: [
-      const SizedBox(width: 12),
+            // ===== CUSTOM BACK BUTTON =====
+            GestureDetector(
+              onTap: () => Get.back(),
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: isDark ? darkSurface : Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  Icons.arrow_back,
+                  size: 18,
+                  color: isDark ? AppColors.darkIcon : Colors.black,
+                ),
+              ),
+            ),
 
-      // ===== BACK BUTTON CONTAINER =====
-      GestureDetector(
-        onTap: () => Get.back(),
-        child: Container(
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: isDark ? Colors.black : Colors.white,
-            borderRadius: BorderRadius.circular(10),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
-              )
-            ],
-          ),
-          child: Icon(
-            Icons.arrow_back,
-            size: 18,
-            color: isDark ? AppColors.darkIcon : Colors.black,
-          ),
+            const SizedBox(width: 12),
+
+            // ===== TITLE (BESAR) =====
+            Text(
+              "Services",
+              style: TextStyle(
+                color: isDark ? AppColors.darkIcon : Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 24,       // ← DIBESARKAN
+              ),
+            ),
+          ],
         ),
       ),
-
-      const SizedBox(width: 12),
-
-      // ===== TITLE (Services) =====
-      Text(
-        "Services",
-        style: TextStyle(
-          color: isDark ? AppColors.darkIcon : Colors.white,
-          fontWeight: FontWeight.bold,
-          fontSize: 22,
-        ),
-      ),
-    ],
-  ),
-),
-
 
       extendBodyBehindAppBar: true,
 
+      // =====================================================
+      // BODY
+      // =====================================================
       body: Obx(() {
         if (controller.isLoading.value) {
           return const Center(child: CircularProgressIndicator());
@@ -89,7 +96,7 @@ class TodoListView extends GetView<TodoController> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Container(
                 decoration: BoxDecoration(
-                  color: isDark ? Colors.black : Colors.white,
+                  color: isDark ? darkSurface : Colors.white,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 padding: const EdgeInsets.all(10),
@@ -113,11 +120,14 @@ class TodoListView extends GetView<TodoController> {
               child: InkWell(
                 onTap: () => controller.goToForm(),
                 borderRadius: BorderRadius.circular(10),
+                splashColor: isDark ? AppColors.darkTextSecondary : Colors.white,
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.black : theme.colorScheme.primary,
+                    color: isDark ? darkSurface : theme.colorScheme.primary,
                     borderRadius: BorderRadius.circular(10),
+
+                    // 🔥 BORDER DARK THEME SUDAH DIGANTI
                     border: Border.all(
                       color: isDark ? AppColors.darkIcon : Colors.transparent,
                       width: 1.2,
@@ -138,16 +148,13 @@ class TodoListView extends GetView<TodoController> {
 
             const SizedBox(height: 16),
 
-            // ======================================================
-            //    LIST AREA — SEJAJAR DENGAN BANNER & TOMBOL (16px)
-            //    + BORDERS & RADIUS ATAS 12 + TANPA SPACE KOSONG
-            // ======================================================
+            // ================= LIST AREA =================
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.black : Colors.white,
+                    color: isDark ? darkSurface : Colors.white,
                     borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(12),
                       topRight: Radius.circular(12),
@@ -174,7 +181,7 @@ class TodoListView extends GetView<TodoController> {
                           ),
                         )
                       : ListView.builder(
-                          padding: EdgeInsets.zero, // ⬅ penting supaya tidak ada space kosong
+                          padding: EdgeInsets.zero,
                           itemCount: controller.todos.length,
                           itemBuilder: (context, index) {
                             final todo = controller.todos[index];
@@ -184,10 +191,14 @@ class TodoListView extends GetView<TodoController> {
                               margin: const EdgeInsets.only(bottom: 12),
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: isDark ? Colors.black : const Color(0xFFF9F9F9),
+                                color: isDark ? darkCard : const Color(0xFFF9F9F9),
                                 borderRadius: BorderRadius.circular(12),
+
+                                // 🔥 BORDER TODOLIST DARK THEME DIGANTI KE darkIcon
                                 border: Border.all(
-                                  color: isDark ? AppColors.darkIcon : Colors.grey.shade300,
+                                  color: isDark
+                                      ? AppColors.darkIcon
+                                      : Colors.grey.shade300,
                                   width: 1,
                                 ),
                               ),
@@ -213,18 +224,13 @@ class TodoListView extends GetView<TodoController> {
                                           style: TextStyle(
                                             fontSize: 16,
                                             fontWeight: FontWeight.w600,
-                                            decoration:
-                                                done ? TextDecoration.lineThrough : null,
-                                            color: isDark
-                                                ? AppColors.darkIcon
-                                                : theme.colorScheme.onSurface,
+                                            decoration: done ? TextDecoration.lineThrough : null,
+                                            color: isDark ? AppColors.darkIcon : theme.colorScheme.onSurface,
                                           ),
                                         ),
                                         const SizedBox(height: 6),
                                         Text(
-                                          todo.description.isEmpty
-                                              ? "Detail"
-                                              : todo.description,
+                                          todo.description.isEmpty ? "Detail" : todo.description,
                                           style: TextStyle(
                                             color: theme.colorScheme.onSurfaceVariant,
                                             fontSize: 13,
@@ -238,9 +244,7 @@ class TodoListView extends GetView<TodoController> {
                                     onPressed: () => controller.goToForm(todo: todo),
                                     icon: Icon(
                                       Icons.edit_outlined,
-                                      color: isDark
-                                          ? AppColors.darkIcon
-                                          : theme.colorScheme.primary,
+                                      color: isDark ? AppColors.darkIcon : theme.colorScheme.primary,
                                     ),
                                   ),
 
@@ -270,12 +274,10 @@ class TodoListView extends GetView<TodoController> {
         type: BottomNavigationBarType.fixed,
         currentIndex: 1,
         selectedItemColor: isDark ? AppColors.darkIcon : theme.colorScheme.primary,
-        unselectedItemColor:
-            isDark ? AppColors.darkTextSecondary : Colors.grey,
+        unselectedItemColor: isDark ? AppColors.darkTextSecondary : Colors.grey,
 
         onTap: (index) {
           if (index == 0) Get.offAllNamed(Routes.HOME_MAIN);
-
           if (index == 3) {
             final homeMainController = Get.find<HomeMainController>();
 
@@ -323,7 +325,6 @@ class TodoListView extends GetView<TodoController> {
             });
           }
         },
-
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.list_alt), label: 'Services'),
