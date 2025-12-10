@@ -48,7 +48,6 @@ class _LoginViewState extends State<LoginView> {
 
                   const SizedBox(height: 12),
 
-                  
                   // Subtitle
                   Text(
                     AppStrings.loginToContinue,

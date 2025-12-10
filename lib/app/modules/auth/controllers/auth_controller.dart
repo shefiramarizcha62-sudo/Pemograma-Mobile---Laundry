@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../../data/providers/auth_provider.dart';
 import '../../../core/values/app_strings.dart';
 import '../../../routes/app_pages.dart';
+import 'package:my_app/app/data/providers/notification_provider.dart';
 
 class AuthController extends GetxController {
   final AuthProvider _authProvider = Get.find();
@@ -21,7 +22,16 @@ class AuthController extends GetxController {
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
+
+      // SIMPAN KE RIWAYAT
+      Get.find<NotificationProvider>().log(
+        title: "Login Berhasil",
+        body: "User berhasil login",
+        type: "local",
+      );
+
       Get.offAllNamed(Routes.HOME_MAIN);
+
     } catch (e) {
       Get.snackbar(
         'Error',
@@ -46,6 +56,7 @@ class AuthController extends GetxController {
         colorText: Colors.white,
         duration: const Duration(seconds: 4),
       );
+
       // Ensure any snackbars are closed, then return to the existing login page
       Get.closeAllSnackbars();
       Get.until((route) => route.settings.name == Routes.LOGIN);

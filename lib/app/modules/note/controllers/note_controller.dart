@@ -11,6 +11,8 @@ import '../../../data/providers/note_provider.dart';
 import '../../../data/services/storage_service.dart';
 import 'package:my_app/app/routes/app_pages.dart';
 import '../views/note_form_view.dart';
+import '../../../data/providers/notification_provider.dart';
+import '../../../data/models/notification_log_model.dart';
 
 class NoteController extends GetxController {
   static const bucketId = 'note-images';
@@ -58,6 +60,17 @@ class NoteController extends GetxController {
       final data = await _noteProvider.getNotes();
       final enriched = await _attachImageUrls(data);
       notes.assignAll(enriched);
+
+      // Tambahkan log bahwa load sukses
+      Get.find<NotificationProvider>().addLog(
+        NotificationLogModel(
+          title: "Load Notes",
+          body: "Catatan berhasil dimuat (${enriched.length} items)",
+          type: "local",
+          timestamp: DateTime.now(),
+        ),
+      );
+
     } catch (e) {
       Get.snackbar(
         'Error',
@@ -102,6 +115,16 @@ class NoteController extends GetxController {
           backgroundColor: Colors.green,
           colorText: Colors.white,
         );
+
+        // Tambahkan Log
+        Get.find<NotificationProvider>().addLog(
+          NotificationLogModel(
+            title: "Delete Note",
+            body: "Catatan dihapus: ${note.title}",
+            type: "local",
+            timestamp: DateTime.now(),
+          ),
+        );
         await loadNotes();
       } catch (e) {
         Get.snackbar(
@@ -144,6 +167,16 @@ class NoteController extends GetxController {
           result,
           backgroundColor: Colors.green,
           colorText: Colors.white,
+        );
+
+        // TAMBAHKAN LOG
+        Get.find<NotificationProvider>().addLog(
+          NotificationLogModel(
+            title: "Save Note",
+            body: result, // biasanya: "Note berhasil disimpan"
+            type: "local",
+            timestamp: DateTime.now(),
+          ),
         );
       }
     }

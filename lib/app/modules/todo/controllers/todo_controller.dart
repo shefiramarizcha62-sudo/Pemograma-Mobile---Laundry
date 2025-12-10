@@ -5,6 +5,8 @@ import '../../../core/values/app_strings.dart';
 import '../../../data/models/todo_model.dart';
 import '../../../data/providers/todo_provider.dart';
 import '../../../routes/app_pages.dart';
+import '../../../data/providers/notification_provider.dart';
+import '../../../data/models/notification_log_model.dart';
 
 class TodoController extends GetxController {
   final TodoProvider _todoProvider = Get.find();
@@ -43,6 +45,13 @@ class TodoController extends GetxController {
       if (index != -1) {
         todos[index] = updated;
       }
+
+       // LOG NOTIF
+      Get.find<NotificationProvider>().log(
+        title: "Todo Status Changed",
+        body: '"${todo.title}" marked as ${updated.isCompleted ? "Completed" : "Uncompleted"}',
+        type: "local",
+      );
     } catch (e) {
       Get.snackbar(
         'Error',
@@ -82,6 +91,13 @@ class TodoController extends GetxController {
           backgroundColor: Colors.green,
           colorText: Colors.white,
         );
+
+        // LOG NOTIF
+        Get.find<NotificationProvider>().log(
+          title: "Todo Deleted",
+          body: '"${todo.title}" has been removed',
+          type: "local",
+        );
       } catch (e) {
         Get.snackbar(
           'Error',
@@ -104,6 +120,12 @@ class TodoController extends GetxController {
           result,
           backgroundColor: Colors.green,
           colorText: Colors.white,
+        );
+
+          Get.find<NotificationProvider>().log(
+          title: "Todo Updated",
+          body: result,
+          type: "local",
         );
       }
     }

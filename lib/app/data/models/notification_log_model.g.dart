@@ -1,44 +1,41 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'todo_model.dart';
+part of 'notification_log_model.dart';
 
 // **************************************************************************
 // TypeAdapterGenerator
 // **************************************************************************
 
-class TodoModelAdapter extends TypeAdapter<TodoModel> {
+class NotificationLogModelAdapter extends TypeAdapter<NotificationLogModel> {
   @override
-  final int typeId = 1;
+  final int typeId = 2;
 
   @override
-  TodoModel read(BinaryReader reader) {
+  NotificationLogModel read(BinaryReader reader) {
     final numOfFields = reader.readByte();
     final fields = <int, dynamic>{
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
-    return TodoModel(
-      id: fields[0] as int,
-      title: fields[1] as String,
-      description: fields[2] as String,
-      isCompleted: fields[3] as bool,
-      createdAt: fields[4] as DateTime,
+    return NotificationLogModel(
+      title: fields[0] as String,
+      body: fields[1] as String,
+      timestamp: fields[2] as DateTime,
+      type: fields[3] as String,
     );
   }
 
   @override
-  void write(BinaryWriter writer, TodoModel obj) {
+  void write(BinaryWriter writer, NotificationLogModel obj) {
     writer
-      ..writeByte(5)
-      ..writeByte(0)
-      ..write(obj.id)
-      ..writeByte(1)
-      ..write(obj.title)
-      ..writeByte(2)
-      ..write(obj.description)
-      ..writeByte(3)
-      ..write(obj.isCompleted)
       ..writeByte(4)
-      ..write(obj.createdAt);
+      ..writeByte(0)
+      ..write(obj.title)
+      ..writeByte(1)
+      ..write(obj.body)
+      ..writeByte(2)
+      ..write(obj.timestamp)
+      ..writeByte(3)
+      ..write(obj.type);
   }
 
   @override
@@ -47,7 +44,7 @@ class TodoModelAdapter extends TypeAdapter<TodoModel> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is TodoModelAdapter &&
+      other is NotificationLogModelAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }

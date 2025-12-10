@@ -12,6 +12,7 @@ import '../../location/views/gps_location_view.dart';
 import '../../location/controllers/gps_location_controller.dart';
 import '../../location/controllers/network_location_controller.dart';
 import '../../location/views/network_location_view.dart';
+import 'package:my_app/app/modules/notifications/view/notification_history_view.dart';
 
 class HomeMainView extends GetView<HomeMainController> {
   const HomeMainView({super.key});
@@ -418,8 +419,9 @@ class HomeMainView extends GetView<HomeMainController> {
                   Get.find<AuthController>().logout();
                 }
               });
+            } else if (index == 2) {
+              Get.to(() => const NotificationHistoryView());
             } else {
-              // 0 (Home) dan 2 (Notifications) tetap pakai selectedIndex biasa
               controller.selectedIndex.value = index;
             }
           },

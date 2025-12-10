@@ -26,12 +26,33 @@ import 'package:my_app/app/routes/app_pages.dart';
 
 import 'package:my_app/app/modules/auth/controllers/auth_controller.dart';
 
+// ADD: Notification
+import 'package:my_app/app/data/providers/notification_provider.dart';
+import 'package:my_app/app/data/services/notification_handler.dart';
+import 'package:my_app/app/data/models/notification_log_model.dart';
+
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'dart:developer';
+
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  log("📩 Background Message: ${message.messageId}");
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Hive.initFlutter();
-  
-  // 🔹 Style status bar & navigation bar default
+
+  // Init Firebase
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  // Status bar style default
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -42,86 +63,65 @@ Future<void> main() async {
   );
 
   try {
-    // 🔹 Inisialisasi semua service async
+    // ============================================
+    // 1️⃣ INIT ALL SERVICES DULU
+    // ============================================
     await Get.putAsync(() => SupabaseService().init());
     Get.put(ApiService());
     Get.put(AuthProvider());
-    Get.put(AuthController()); 
+    Get.put(AuthController());
     Get.put(NoteProvider());
     Get.put(StorageService());
-    await Get.putAsync(() => LocalStorageService().init());
-    Get.put(TodoProvider());
 
-    // 🔹 Theme Provider (HANYA SEKALI)
+    // LocalStorageService WAJIB sebelum Notification
+    await Get.putAsync(() => LocalStorageService().init());
+
+    Get.put(TodoProvider());
+    Get.put(NotificationProvider());
+
     final themeProvider = Get.put(ThemeProvider());
     await themeProvider.init();
 
-    if (kDebugMode) {
-      debugPrint('✅ All services initialized successfully');
-    }
+    // ============================================
+    // 2️⃣ BARU INIT NOTIFICATION SETELAH SEMUA READY
+    // ============================================
+    final notificationHandler = NotificationHandler();
+    await notificationHandler.initLocalNotification();
+    await notificationHandler.initPushNotification();
 
-    // 🔹 Jalankan aplikasi
-    runApp(const MyApp());
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+    final settings = await FirebaseMessaging.instance.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+
+    FirebaseMessaging.onMessage.listen((message) {
+      NotificationHandler().showNotification(
+        title: message.notification?.title ?? '',
+        body: message.notification?.body ?? '',
+      );
+    });
+
+    String? token = await FirebaseMessaging.instance.getToken();
+    print("🔥🔥🔥 FCM TOKEN: $token");
+
+    FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
+      print("♻️ NEW TOKEN: $newToken");
+    });
+
+    if (kDebugMode) {
+      debugPrint('✅ All services & notification initialized successfully');
+    }
 
   } catch (e, stackTrace) {
-    if (kDebugMode) {
-      debugPrint('❌ Error during initialization:');
-      debugPrint(e.toString());
-      debugPrint(stackTrace.toString());
-    }
-
-    // 🔹 Tampilan error fallback (jika init gagal)
-    runApp(MaterialApp(
-      home: Scaffold(
-        backgroundColor: Colors.red[50],
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.error_outline, size: 80, color: Colors.red),
-                const SizedBox(height: 24),
-                const Text(
-                  'Initialization Error',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.red,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.redAccent),
-                  ),
-                  child: Text(
-                    e.toString(),
-                    style: const TextStyle(fontSize: 14),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton.icon(
-                  onPressed: () => SystemChannels.platform.invokeMethod('SystemNavigator.pop'),
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Restart App'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    ));
+    debugPrint("❌ Init error: $e");
+    debugPrint(stackTrace.toString());
   }
+
+  // Running app once
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
