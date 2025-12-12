@@ -4,6 +4,11 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/intl.dart';
 import '../../../data/providers/notification_provider.dart';
 import '../../../data/models/notification_log_model.dart';
+import '../../homeMain/controllers/homeMain_controllers.dart';
+import '../../homeMain/views/homeMain_view.dart';
+import '../../../routes/app_pages.dart';
+import '../../../data/providers/theme_provider.dart';
+import '../../auth/controllers/auth_controller.dart';
 
 class NotificationHistoryView extends StatelessWidget {
   const NotificationHistoryView({super.key});
@@ -11,6 +16,10 @@ class NotificationHistoryView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final NotificationProvider provider = Get.find();
+    final HomeMainController mainController = Get.find();
+    final theme = Theme.of(context);
+    final themeProvider = Get.find<ThemeProvider>();
+    final authController = Get.find<AuthController>();
 
     return Scaffold(
       appBar: AppBar(
@@ -61,6 +70,74 @@ class NotificationHistoryView extends StatelessWidget {
           );
         },
       ),
+
+      bottomNavigationBar: Obx(
+        () => BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          currentIndex: mainController.selectedIndex.value,
+          onTap: (index) {
+            if (index == 0) Get.offAllNamed(Routes.HOME_MAIN);
+            
+            if (index == 1) {
+            Get.toNamed(Routes.TODO_LIST);
+            }
+
+            if (index == 3) {
+            final homeMainController = Get.find<HomeMainController>();
+
+            showMenu<String>(
+              context: context,
+              position: RelativeRect.fromLTRB(
+                MediaQuery.of(context).size.width - 160,
+                MediaQuery.of(context).size.height -
+                    kBottomNavigationBarHeight -
+                    120,
+                0,
+                0,
+              ),
+              items: [
+                PopupMenuItem(
+                  enabled: false,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("Logged in", style: theme.textTheme.bodySmall),
+                      const SizedBox(height: 4),
+                      Text(
+                        homeMainController.userEmail ?? "-",
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const PopupMenuDivider(),
+                PopupMenuItem(
+                  value: "logout",
+                  child: Row(
+                    children: [
+                      Icon(Icons.logout, color: theme.colorScheme.error),
+                      const SizedBox(width: 8),
+                      const Text("Logout"),
+                    ],
+                  ),
+                ),
+              ],
+            ).then((value) {
+              if (value == "logout") authController.logout();
+            });
+          }
+          },
+          items: const [
+            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+            BottomNavigationBarItem(icon: Icon(Icons.list_alt), label: 'Services'),
+            BottomNavigationBarItem(icon: Icon(Icons.notifications), label: 'Notifications'),
+            BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+          ],
+        ),
+      ),
+
     );
   }
 }

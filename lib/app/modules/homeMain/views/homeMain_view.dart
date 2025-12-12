@@ -361,70 +361,62 @@ class HomeMainView extends GetView<HomeMainController> {
               : Colors.grey,
           currentIndex: controller.selectedIndex.value,
           onTap: (index) {
-            if (index == 1) {
-              // 0 = Home
-              // 1 = Services  --> TODO LIST
-              // 2 = Notifications
-              // 3 = Profile
-              Get.toNamed(Routes.TODO_LIST);
-            } else if (index == 3) {
-              final authController = Get.find<AuthController>();
+          controller.selectedIndex.value = index;
 
-              showMenu<String>(
-                context: context,
-                position: RelativeRect.fromLTRB(
-                  MediaQuery.of(context).size.width - 150,
-                  MediaQuery.of(context).size.height -
-                      kBottomNavigationBarHeight -
-                      120,
-                  16,
-                  0,
+          if (index == 0) {
+            Get.toNamed(Routes.HOME_MAIN);
+          }
+
+          if (index == 1) {
+            Get.toNamed(Routes.TODO_LIST);
+          }
+
+          if (index == 2) {
+            Get.toNamed(Routes.NOTIFICATION);
+          }
+
+          if (index == 3) {
+            final authController = Get.find<AuthController>();
+
+            showMenu<String>(
+              context: context,
+              position: RelativeRect.fromLTRB(
+                MediaQuery.of(context).size.width - 150,
+                MediaQuery.of(context).size.height - kBottomNavigationBarHeight - 120,
+                16,
+                0,
+              ),
+              items: [
+                PopupMenuItem<String>(
+                  enabled: false,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(AppStrings.loggedIn),
+                      SizedBox(height: 4),
+                      Text(controller.userEmail ?? '-'),
+                    ],
+                  ),
                 ),
-                items: [
-                  PopupMenuItem<String>(
-                    enabled: false,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          AppStrings.loggedIn,
-                          style: theme.textTheme.bodySmall,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          controller.userEmail ?? '-',
-                          style:
-                              theme.textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
+                PopupMenuDivider(),
+                PopupMenuItem<String>(
+                  value: 'logout',
+                  child: Row(
+                    children: [
+                      Icon(Icons.logout),
+                      SizedBox(width: 8),
+                      Text(AppStrings.logout),
+                    ],
                   ),
-                  const PopupMenuDivider(),
-                  PopupMenuItem<String>(
-                    value: 'logout',
-                    child: Row(
-                      children: [
-                        Icon(Icons.logout,
-                            color: theme.colorScheme.error),
-                        const SizedBox(width: 8),
-                        const Text(AppStrings.logout),
-                      ],
-                    ),
-                  ),
-                ],
-              ).then((value) {
-                if (value == 'logout') {
-                  Get.find<AuthController>().logout();
-                }
-              });
-            } else if (index == 2) {
-              Get.to(() => const NotificationHistoryView());
-            } else {
-              controller.selectedIndex.value = index;
-            }
-          },
+                ),
+              ],
+            ).then((value) {
+              if (value == 'logout') {
+                authController.logout();
+              }
+            });
+          }
+        },
           items: const [
             BottomNavigationBarItem(
               icon: Icon(Icons.home),

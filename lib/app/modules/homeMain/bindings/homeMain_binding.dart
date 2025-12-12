@@ -6,6 +6,6 @@ class HomeMainBinding extends Bindings {
   @override
   void dependencies() {
     Get.lazyPut<HomeMainRepository>(() => HomeMainRepository());
-    Get.lazyPut<HomeMainController>(() => HomeMainController());
+    Get.put<HomeMainController>(HomeMainController(), permanent: true);
   }
 }

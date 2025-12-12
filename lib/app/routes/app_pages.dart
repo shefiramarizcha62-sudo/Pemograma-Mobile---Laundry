@@ -19,6 +19,7 @@ import '../modules/location/bindings/network_location_binding.dart';
 import '../modules/location/bindings/gps_location_binding.dart';
 import '../modules/location/views/network_location_view.dart';
 import '../modules/location/views/gps_location_view.dart';
+import '../modules/notifications/view/notification_history_view.dart';
 
 
 part 'app_routes.dart';
@@ -72,6 +73,7 @@ class AppPages {
        page: () => const TodoListView(),
        binding: TodoBinding(),
      ),
+
      GetPage(
        name: Routes.TODO_FORM,
        page: () => TodoFormView(),
@@ -96,5 +98,10 @@ class AppPages {
       binding: GpsLocationBinding(),
     ),
 
+    GetPage(
+    name: Routes.NOTIFICATION,
+    page: () => const NotificationHistoryView(),
+    binding: HomeMainBinding(), 
+    ),
   ];
 }

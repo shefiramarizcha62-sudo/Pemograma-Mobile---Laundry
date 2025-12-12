@@ -278,6 +278,9 @@ class TodoListView extends GetView<TodoController> {
 
         onTap: (index) {
           if (index == 0) Get.offAllNamed(Routes.HOME_MAIN);
+          if (index == 2) {
+            Get.offNamed(Routes.NOTIFICATION);
+          }
           if (index == 3) {
             final homeMainController = Get.find<HomeMainController>();
 

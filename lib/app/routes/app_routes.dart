@@ -13,6 +13,7 @@ abstract class Routes {
   static const ORDER = '/order';
   static const NETWORK_LOCATION = '/network-location';
   static const GPS_LOCATION = '/gps-location';
+  static const NOTIFICATION = '/notification-history';
 }
 
 abstract class _Paths {
@@ -25,4 +26,5 @@ abstract class _Paths {
   static const NOTE_FORM = '/note-form';
   static const TODO_LIST = '/todos';
   static const TODO_FORM = '/todo-form';
+  static const NOTIFICATION = '/notification-history';
 }
