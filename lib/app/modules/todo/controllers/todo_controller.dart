@@ -6,13 +6,23 @@ import '../../../data/models/todo_model.dart';
 import '../../../data/providers/todo_provider.dart';
 import '../../../routes/app_pages.dart';
 import '../../../data/providers/notification_provider.dart';
-import '../../../data/models/notification_log_model.dart';
+import '../../../data/services/notification_handler.dart';
 
 class TodoController extends GetxController {
+  // ==========================
+  // Dependencies
+  // ==========================
   final TodoProvider _todoProvider = Get.find();
+  final NotificationProvider _notificationProvider = Get.find();
+  final NotificationHandler _notificationHandler = Get.find();
 
+  // ==========================
+  // State
+  // ==========================
   final todos = <TodoModel>[].obs;
   final isLoading = true.obs;
+
+  static const String _moduleName = 'Services';
 
   @override
   void onInit() {
@@ -20,48 +30,51 @@ class TodoController extends GetxController {
     loadTodos();
   }
 
+  // ==========================
+  // Load Data
+  // ==========================
   Future<void> loadTodos() async {
     isLoading.value = true;
     try {
       final data = _todoProvider.getTodos();
       todos.assignAll(data);
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to load tasks: $e',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+      _showError('Failed to load services: $e');
     } finally {
       isLoading.value = false;
     }
   }
 
+  // ==========================
+  // Toggle Complete / Uncomplete
+  // ==========================
   Future<void> toggleTodo(TodoModel todo) async {
     final updated = todo.copyWith(isCompleted: !todo.isCompleted);
+
     try {
       await _todoProvider.updateTodo(updated);
+
       final index = todos.indexWhere((item) => item.id == todo.id);
       if (index != -1) {
         todos[index] = updated;
       }
 
-       // LOG NOTIF
-      Get.find<NotificationProvider>().log(
-        title: "Todo Status Changed",
-        body: '"${todo.title}" marked as ${updated.isCompleted ? "Completed" : "Uncompleted"}',
-        type: "local",
-      );
+      final title = updated.isCompleted
+          ? '$_moduleName Completed'
+          : '$_moduleName Uncompleted';
+
+      final body =
+          '"${todo.title}" marked as ${updated.isCompleted ? "Completed" : "Uncompleted"}';
+
+      _notify(title, body);
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to update task: $e',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+      _showError('Failed to update services: $e');
     }
   }
 
+  // ==========================
+  // Delete Service
+  // ==========================
   Future<void> deleteTodo(TodoModel todo) async {
     final confirm = await Get.dialog<bool>(
       AlertDialog(
@@ -81,53 +94,77 @@ class TodoController extends GetxController {
       ),
     );
 
-    if (confirm == true) {
-      try {
-        await _todoProvider.deleteTodo(todo.id);
-        todos.removeWhere((item) => item.id == todo.id);
-        Get.snackbar(
-          'Success',
-          AppStrings.todoDeletedSuccess,
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-        );
+    if (confirm != true) return;
 
-        // LOG NOTIF
-        Get.find<NotificationProvider>().log(
-          title: "Todo Deleted",
-          body: '"${todo.title}" has been removed',
-          type: "local",
-        );
-      } catch (e) {
-        Get.snackbar(
-          'Error',
-          'Failed to delete task: $e',
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
-      }
+    try {
+      await _todoProvider.deleteTodo(todo.id);
+      todos.removeWhere((item) => item.id == todo.id);
+
+      _notify(
+        '$_moduleName Deleted',
+        '"${todo.title}" has been removed',
+      );
+
+      Get.snackbar(
+        'Success',
+        AppStrings.todoDeletedSuccess,
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+      );
+    } catch (e) {
+      _showError('Failed to delete services: $e');
     }
   }
 
+  // ==========================
+  // Add / Update From Form
+  // ==========================
   Future<void> goToForm({TodoModel? todo}) async {
     final result = await Get.toNamed(Routes.TODO_FORM, arguments: todo);
-    if (result != null) {
-      await loadTodos();
+    if (result == null || result is! String || result.isEmpty) return;
 
-      if (result is String && result.isNotEmpty) {
-        Get.snackbar(
-          'Success',
-          result,
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-        );
+    await loadTodos();
 
-          Get.find<NotificationProvider>().log(
-          title: "Todo Updated",
-          body: result,
-          type: "local",
-        );
-      }
-    }
+    Get.snackbar(
+      'Success',
+      result,
+      backgroundColor: Colors.green,
+      colorText: Colors.white,
+    );
+
+    // 🔔 Notif berbeda untuk ADD vs UPDATE
+    final title = todo == null ? 'New Services!' : '$_moduleName Updated';
+    final body = result;
+
+    _notify(title, body);
+  }
+
+  // ==========================
+  // 🔔 Notification Helper
+  // ==========================
+  Future<void> _notify(String title, String body) async {
+    _notificationProvider.log(
+      title: title,
+      body: body,
+      type: 'local',
+    );
+
+    await _notificationHandler.showNotification(
+      title: title,
+      body: body,
+      payload: Routes.TODO_LIST,
+    );
+  }
+
+  // ==========================
+  // Error Helper
+  // ==========================
+  void _showError(String message) {
+    Get.snackbar(
+      'Error',
+      message,
+      backgroundColor: Colors.red,
+      colorText: Colors.white,
+    );
   }
 }

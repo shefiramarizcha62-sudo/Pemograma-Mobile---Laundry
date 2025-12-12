@@ -26,20 +26,32 @@ import 'package:my_app/app/routes/app_pages.dart';
 
 import 'package:my_app/app/modules/auth/controllers/auth_controller.dart';
 
-// ADD: Notification
+// Notification
 import 'package:my_app/app/data/providers/notification_provider.dart';
 import 'package:my_app/app/data/services/notification_handler.dart';
-import 'package:my_app/app/data/models/notification_log_model.dart';
 
+// Firebase
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'dart:developer';
 
+/// ================================
+/// 🔔 Background handler (WAJIB TOP LEVEL)
+/// ================================
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   log("📩 Background Message: ${message.messageId}");
+}
+
+/// ================================
+/// 🔔 Handle routing when notif tapped
+/// ================================
+void _handleNotificationNavigation(RemoteMessage message) {
+  // Delay kecil supaya GetX & routing siap
+  Future.delayed(const Duration(milliseconds: 300), () {
+    Get.toNamed(Routes.NOTIFICATION);
+  });
 }
 
 Future<void> main() async {
@@ -47,12 +59,16 @@ Future<void> main() async {
 
   await Hive.initFlutter();
 
+  // ================================
   // Init Firebase
+  // ================================
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
+  // ================================
   // Status bar style default
+  // ================================
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -64,7 +80,7 @@ Future<void> main() async {
 
   try {
     // ============================================
-    // 1️⃣ INIT ALL SERVICES DULU
+    // 1️⃣ INIT ALL SERVICES
     // ============================================
     await Get.putAsync(() => SupabaseService().init());
     Get.put(ApiService());
@@ -79,48 +95,80 @@ Future<void> main() async {
     Get.put(TodoProvider());
     Get.put(NotificationProvider());
 
+    // 🔔 NotificationHandler sebagai singleton
+    final notificationHandler = Get.put(NotificationHandler());
+
     final themeProvider = Get.put(ThemeProvider());
     await themeProvider.init();
 
     // ============================================
-    // 2️⃣ BARU INIT NOTIFICATION SETELAH SEMUA READY
+    // 2️⃣ INIT NOTIFICATION (LOCAL + FCM)
     // ============================================
-    final notificationHandler = NotificationHandler();
     await notificationHandler.initLocalNotification();
     await notificationHandler.initPushNotification();
 
-    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+    FirebaseMessaging.onBackgroundMessage(
+      _firebaseMessagingBackgroundHandler,
+    );
 
-    final settings = await FirebaseMessaging.instance.requestPermission(
+    // Permission (Android 13+)
+    await FirebaseMessaging.instance.requestPermission(
       alert: true,
       badge: true,
       sound: true,
     );
 
+    // Foreground message
     FirebaseMessaging.onMessage.listen((message) {
-      NotificationHandler().showNotification(
+      notificationHandler.showNotification(
         title: message.notification?.title ?? '',
         body: message.notification?.body ?? '',
       );
     });
 
-    String? token = await FirebaseMessaging.instance.getToken();
-    print("🔥🔥🔥 FCM TOKEN: $token");
+    // ================================
+    // 🔔 ROUTING DARI NOTIF
+    // ================================
+
+    // App dibuka dari TERMINATED (mati total)
+    final initialMessage =
+        await FirebaseMessaging.instance.getInitialMessage();
+    if (initialMessage != null) {
+      _handleNotificationNavigation(initialMessage);
+    }
+
+    // App dibuka dari BACKGROUND
+    FirebaseMessaging.onMessageOpenedApp.listen(
+      (RemoteMessage message) {
+        _handleNotificationNavigation(message);
+      },
+    );
+
+    // ================================
+    // Debug token
+    // ================================
+    final token = await FirebaseMessaging.instance.getToken();
+    if (kDebugMode) {
+      debugPrint("🔥🔥🔥 FCM TOKEN: $token");
+    }
 
     FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
-      print("♻️ NEW TOKEN: $newToken");
+      if (kDebugMode) {
+        debugPrint("♻️ NEW TOKEN: $newToken");
+      }
     });
 
     if (kDebugMode) {
       debugPrint('✅ All services & notification initialized successfully');
     }
-
   } catch (e, stackTrace) {
     debugPrint("❌ Init error: $e");
     debugPrint(stackTrace.toString());
   }
 
-  // Running app once
+  // ================================
+  // Run App
+  // ================================
   runApp(const MyApp());
 }
 
@@ -133,7 +181,6 @@ class MyApp extends StatelessWidget {
     final themeProvider = Get.find<ThemeProvider>();
 
     return Obx(() {
-      // 🔹 Sinkronisasi warna sistem dengan tema
       SystemChrome.setSystemUIOverlayStyle(
         SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
@@ -146,14 +193,14 @@ class MyApp extends StatelessWidget {
         ),
       );
 
-       return Container(
+      return Container(
         decoration: const BoxDecoration(
           gradient: AppColors.mainGradient,
         ),
         child: GetMaterialApp(
           title: AppStrings.appName,
           theme: AppTheme.lightTheme.copyWith(
-            scaffoldBackgroundColor: Colors.transparent, // wajib supaya gradient terlihat
+            scaffoldBackgroundColor: Colors.transparent,
           ),
           darkTheme: AppTheme.darkTheme,
           themeMode:

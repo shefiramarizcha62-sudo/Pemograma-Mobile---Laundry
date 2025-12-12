@@ -7,6 +7,8 @@ import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import '../providers/notification_provider.dart';
 import '../models/notification_log_model.dart';
+import '../../routes/app_pages.dart';
+
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   print('Pesan diterima di background: ${message.notification?.title}');
@@ -20,9 +22,9 @@ class NotificationHandler {
       FlutterLocalNotificationsPlugin();
 
   // Lazily get NotificationProvider to avoid init issues if not ready
-  final NotificationProvider _notificationProvider = Get.put(
-    NotificationProvider(),
-  );
+  NotificationProvider get _notificationProvider =>
+    Get.find<NotificationProvider>();
+
 
   // Android Notification Channel
   final _androidChannel = const AndroidNotificationChannel(
@@ -144,8 +146,26 @@ class NotificationHandler {
       onDidReceiveNotificationResponse: (details) {
         // Handle local notification tap
         print('Local Notification Tapped: ${details.payload}');
+        if (details.payload != null && details.payload!.isNotEmpty) {
+          Get.offAllNamed(details.payload!); 
+        }
       },
     );
+
+    // 🔥 TAMBAHAN WAJIB: HANDLE APP DIBUKA DARI NOTIF (TERMINATED)
+final NotificationAppLaunchDetails? launchDetails =
+    await _localNotification.getNotificationAppLaunchDetails();
+
+if (launchDetails?.didNotificationLaunchApp ?? false) {
+  final payload = launchDetails!.notificationResponse?.payload;
+
+  if (payload != null && payload.isNotEmpty) {
+    // Delay supaya GetMaterialApp sudah siap
+    Future.delayed(const Duration(milliseconds: 500), () {
+      Get.offAllNamed(payload);
+    });
+  }
+}
 
     await _localNotification
     .resolvePlatformSpecificImplementation<
@@ -156,6 +176,7 @@ class NotificationHandler {
   Future<void> showNotification({
     required String title,
     required String body,
+    String? payload,
   }) async {
     const androidPlatformChannelSpecifics = AndroidNotificationDetails(
       'kusuka_sound_channel',
@@ -180,7 +201,7 @@ class NotificationHandler {
       title,
       body,
       platformChannelSpecifics,
-      payload: 'plain notification',
+      payload: payload,
     );
     _logNotification(title, body, 'local');
   }
@@ -242,7 +263,7 @@ class NotificationHandler {
       'Custom Sound Notification',
       'This is a notification with a custom sound!',
       platformChannelSpecifics,
-      payload: 'custom_sound',
+      payload: Routes.HOME_MAIN,
     );
     _logNotification(
       'Custom Sound Notification',

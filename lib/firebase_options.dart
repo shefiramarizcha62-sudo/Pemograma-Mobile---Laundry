@@ -41,49 +41,49 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyC6Mnfc26V2kiAzrcXWaDIgBRDLuM0VlN8',
-    appId: '1:491138210534:web:21a2b7a249f26aa6caf927',
-    messagingSenderId: '491138210534',
-    projectId: 'modul6-fcm',
-    authDomain: 'modul6-fcm.firebaseapp.com',
-    storageBucket: 'modul6-fcm.firebasestorage.app',
-    measurementId: 'G-HC4XYMZ24N',
+    apiKey: 'AIzaSyC8VJPfCxLWmDV-AJpskpek2mFDjqlYZw4',
+    appId: '1:451430336342:web:97dd3bbabbda8ab263f8f7',
+    messagingSenderId: '451430336342',
+    projectId: 'gangnam-laundry',
+    authDomain: 'gangnam-laundry.firebaseapp.com',
+    storageBucket: 'gangnam-laundry.firebasestorage.app',
+    measurementId: 'G-33JLB6PS3E',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyBQ07n1dpV1pdTP4-6gzXU387yXk3THGYE',
-    appId: '1:491138210534:android:a80bb6ffa9d3264ecaf927',
-    messagingSenderId: '491138210534',
-    projectId: 'modul6-fcm',
-    storageBucket: 'modul6-fcm.firebasestorage.app',
+    apiKey: 'AIzaSyDo0xoTKayXBAR46Uh-vDgQ99ht7uw_he4',
+    appId: '1:451430336342:android:240c02c48400064a63f8f7',
+    messagingSenderId: '451430336342',
+    projectId: 'gangnam-laundry',
+    storageBucket: 'gangnam-laundry.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDgOLxI8uJY4mX_M0QR2rTYTdkJnG5kH7Y',
-    appId: '1:491138210534:ios:abf7ee312f5e86becaf927',
-    messagingSenderId: '491138210534',
-    projectId: 'modul6-fcm',
-    storageBucket: 'modul6-fcm.firebasestorage.app',
+    apiKey: 'AIzaSyA2-AP-XmHD9rp-daJMvQCD7ETjeB5RMLY',
+    appId: '1:451430336342:ios:51350275ad33dd6463f8f7',
+    messagingSenderId: '451430336342',
+    projectId: 'gangnam-laundry',
+    storageBucket: 'gangnam-laundry.firebasestorage.app',
     iosBundleId: 'com.example.myApp',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyDgOLxI8uJY4mX_M0QR2rTYTdkJnG5kH7Y',
-    appId: '1:491138210534:ios:abf7ee312f5e86becaf927',
-    messagingSenderId: '491138210534',
-    projectId: 'modul6-fcm',
-    storageBucket: 'modul6-fcm.firebasestorage.app',
+    apiKey: 'AIzaSyA2-AP-XmHD9rp-daJMvQCD7ETjeB5RMLY',
+    appId: '1:451430336342:ios:51350275ad33dd6463f8f7',
+    messagingSenderId: '451430336342',
+    projectId: 'gangnam-laundry',
+    storageBucket: 'gangnam-laundry.firebasestorage.app',
     iosBundleId: 'com.example.myApp',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyC6Mnfc26V2kiAzrcXWaDIgBRDLuM0VlN8',
-    appId: '1:491138210534:web:5cba4de17d9d6858caf927',
-    messagingSenderId: '491138210534',
-    projectId: 'modul6-fcm',
-    authDomain: 'modul6-fcm.firebaseapp.com',
-    storageBucket: 'modul6-fcm.firebasestorage.app',
-    measurementId: 'G-KGWJLDKBD9',
+    apiKey: 'AIzaSyC8VJPfCxLWmDV-AJpskpek2mFDjqlYZw4',
+    appId: '1:451430336342:web:141a27d3986ad09963f8f7',
+    messagingSenderId: '451430336342',
+    projectId: 'gangnam-laundry',
+    authDomain: 'gangnam-laundry.firebaseapp.com',
+    storageBucket: 'gangnam-laundry.firebasestorage.app',
+    measurementId: 'G-S3FWZ6N879',
   );
 
 }
